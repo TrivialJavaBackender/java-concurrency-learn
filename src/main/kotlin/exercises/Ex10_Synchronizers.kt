@@ -10,18 +10,21 @@ import java.util.concurrent.Exchanger
  *
  * Задание 1: CountDownLatch — "стартовый пистолет"
  *   5 потоков-бегунов ждут сигнала старта (latch.await()).
- *   Главный поток делает countdown. Все бегуны стартуют одновременно.
+ *   Главный поток даёт сигнал. Все бегуны стартуют одновременно.
  *   Второй latch — ждём пока все финишируют.
  *
  * Задание 2: CyclicBarrier — многофазная обработка
  *   3 потока обрабатывают данные в 3 фазах. После каждой фазы ждут
  *   друг друга на барьере. Barrier action печатает "Phase X complete".
+ *   Подумай: почему CyclicBarrier, а не CountDownLatch?
  *
  * Задание 3: Semaphore — ограниченный пул соединений
  *   10 потоков хотят доступ к ресурсу, но одновременно могут работать только 3.
- *   Каждый "использует ресурс" 500ms.
+ *   Каждый "использует ресурс" 500ms. Покажи, что одновременно не больше 3.
  *
  * Задание 4: Exchanger — обмен буферами между producer и consumer
+ *   Producer заполняет буфер, обменивает на пустой от consumer'а.
+ *   Consumer обрабатывает буфер, возвращает пустой. Сделай 3 обмена.
  */
 
 // ===== Задание 1: CountDownLatch =====
@@ -30,17 +33,9 @@ fun task1_countDownLatch() {
     val startSignal = CountDownLatch(1)
     val finishSignal = CountDownLatch(5)
 
-    // TODO: Создай 5 потоков:
-    //   startSignal.await()  // ждёт старта
-    //   println("Runner-$i started!")
-    //   Thread.sleep(random 100-500ms)
-    //   println("Runner-$i finished!")
-    //   finishSignal.countDown()
-    //
-    // println("Ready... Set...")
-    // startSignal.countDown()  // GO!
-    // finishSignal.await()  // ждём всех
-    // println("All runners finished!")
+    // TODO: Создай 5 потоков-бегунов:
+    //   каждый ждёт startSignal, затем "бежит" (sleep 100-500ms), затем finishSignal.countDown()
+    // Дай сигнал старта и дождись финиша всех
 }
 
 // ===== Задание 2: CyclicBarrier =====
@@ -52,12 +47,9 @@ fun task2_cyclicBarrier() {
         phase++
     }
 
-    // TODO: 3 потока, каждый выполняет 3 фазы:
-    //   for (p in 1..3) {
-    //     println("Worker-$i processing phase $p")
-    //     Thread.sleep(random)
-    //     barrier.await()
-    //   }
+    // TODO: Создай 3 потока, каждый выполняет 3 фазы.
+    // В каждой фазе: обработка (sleep) + barrier.await()
+    // Дождись завершения всех потоков
 }
 
 // ===== Задание 3: Semaphore =====
@@ -65,12 +57,10 @@ fun task2_cyclicBarrier() {
 fun task3_semaphore() {
     val semaphore = Semaphore(3) // только 3 одновременно
 
-    // TODO: 10 потоков:
-    //   semaphore.acquire()
-    //   println("Thread-$i acquired (available: ${semaphore.availablePermits()})")
-    //   Thread.sleep(500)
-    //   semaphore.release()
-    //   println("Thread-$i released")
+    // TODO: Создай 10 потоков, каждый:
+    //   acquire() → использует ресурс 500ms → release()
+    // Покажи в логах сколько активных потоков одновременно (availablePermits)
+    // Дождись всех потоков
 }
 
 // ===== Задание 4: Exchanger =====
@@ -78,9 +68,9 @@ fun task3_semaphore() {
 fun task4_exchanger() {
     val exchanger = Exchanger<List<Int>>()
 
-    // TODO: Producer заполняет буфер [1,2,3,4,5], обменивает на пустой
-    // Consumer получает буфер, обрабатывает, возвращает пустой
-    // Сделай 3 обмена
+    // TODO: Producer в цикле 3 раза: заполняет буфер [1..5], вызывает exchanger.exchange()
+    // Consumer в цикле 3 раза: получает полный буфер через exchange(), обрабатывает
+    // Запусти оба в потоках, дождись завершения
 }
 
 fun main() {

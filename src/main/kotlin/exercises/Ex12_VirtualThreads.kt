@@ -1,71 +1,48 @@
 package exercises
 
+import java.util.concurrent.Executors
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
 /**
  * УПРАЖНЕНИЕ 12: Virtual Threads (Java 21+)
  *
  * Задание 1: Создай 100_000 виртуальных потоков, каждый делает Thread.sleep(1000).
- *            Замерь время. Сравни с тем же количеством platform threads (спойлер: не делай это).
+ *            Замерь общее время. Объясни почему это работает, а platform threads — нет.
  *
  * Задание 2: Реализуй HTTP-подобный "сервер":
- *            - Принимает "запросы" из очереди
+ *            - Принимает "запросы" (список строк)
  *            - Каждый запрос обрабатывается в виртуальном потоке
  *            - Обработка включает "блокирующий I/O" (Thread.sleep)
+ *            - Используй Executors.newVirtualThreadPerTaskExecutor()
  *
- * Задание 3: Покажи проблему с pinning — виртуальный поток внутри synchronized
- *            не отпускает carrier thread. Используй ReentrantLock вместо этого.
+ * Задание 3: Покажи проблему с pinning — synchronized блокирует carrier thread.
+ *            Замерь время 100 виртуальных потоков с synchronized vs ReentrantLock.
+ *            Объясни разницу.
  *
- * ВАЖНО: Требует Java 21+. Если используешь более раннюю версию, пропусти это упражнение.
+ * ВАЖНО: Требует Java 21+.
  */
 
 fun task1_massiveVirtualThreads() {
-    // TODO:
-    // val start = System.nanoTime()
-    // val threads = (1..100_000).map {
-    //     Thread.ofVirtual().start { Thread.sleep(1000) }
-    // }
-    // threads.forEach { it.join() }
-    // println("100K virtual threads with sleep(1s): ${(System.nanoTime()-start)/1_000_000}ms")
-    println("TODO: Requires Java 21+")
+    // TODO: Создай 100_000 виртуальных потоков через Thread.ofVirtual().start { }
+    // Дождись всех. Замерь время. Объясни результат.
+    println("TODO")
 }
 
 fun task2_virtualThreadServer() {
-    // TODO:
-    // val executor = Executors.newVirtualThreadPerTaskExecutor()
-    // val requests = (1..1000).map { "request-$it" }
-    //
-    // val futures = requests.map { req ->
-    //     executor.submit<String> {
-    //         Thread.sleep(100) // simulate I/O
-    //         "response for $req"
-    //     }
-    // }
-    //
-    // val responses = futures.map { it.get() }
-    // println("Processed ${responses.size} requests")
-    // executor.shutdown()
-    println("TODO: Requires Java 21+")
+    // TODO: Используй Executors.newVirtualThreadPerTaskExecutor()
+    // Submit 1000 "запросов" (каждый sleep 100ms, возвращает "response for $req")
+    // Собери все результаты, напечатай количество обработанных
+    println("TODO")
 }
 
 fun task3_pinningProblem() {
-    // TODO: Покажи что synchronized блокирует carrier thread:
+    // TODO: Запусти 100 виртуальных потоков с synchronized(lock) { Thread.sleep(100) }
+    // Замерь время — будет медленно (pinning!)
     //
-    // val lock = Object()
-    // val threads = (1..100).map {
-    //     Thread.ofVirtual().start {
-    //         synchronized(lock) {   // BAD: pins virtual thread to carrier
-    //             Thread.sleep(100)
-    //         }
-    //     }
-    // }
-    //
-    // Исправь на ReentrantLock:
-    // val rlock = ReentrantLock()
-    // Thread.ofVirtual().start {
-    //     rlock.withLock {  // GOOD: virtual thread can unmount
-    //         Thread.sleep(100)
-    //     }
-    // }
-    println("TODO: Requires Java 21+")
+    // Затем повтори с ReentrantLock — будет быстро
+    // Объясни: почему synchronized пиннит виртуальный поток к carrier thread?
+    println("TODO")
 }
 
 fun main() {

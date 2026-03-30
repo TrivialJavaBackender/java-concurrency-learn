@@ -6,21 +6,24 @@ import java.util.concurrent.*
  * УПРАЖНЕНИЕ 14: BlockingQueue — все разновидности
  *
  * Задание 1: SynchronousQueue — прямая передача (handoff)
- *            Producer и Consumer — без буфера. put() блокируется до take().
- *            Покажи, что producer ждёт consumer'а.
+ *            Producer и Consumer без буфера: put() блокируется до take().
+ *            Покажи в логах, что producer ждёт consumer'а перед каждой передачей.
  *
  * Задание 2: PriorityBlockingQueue — обработка задач по приоритету
- *            Генератор создаёт задачи с приоритетом 1-10.
- *            Worker обрабатывает в порядке приоритета.
+ *            Положи задачи с приоритетами в случайном порядке.
+ *            Worker должен обработать их строго в порядке приоритета.
  *
  * Задание 3: DelayQueue — отложенное выполнение
- *            Реализуй простой task scheduler: задачи выполняются через указанную задержку.
+ *            Добавь 3 задачи с задержками 3s, 1s, 2s.
+ *            Worker берёт через take() — они должны выйти в порядке B(1s), C(2s), A(3s).
+ *            ScheduledItem уже реализован — реализуй логику запуска.
  *
  * Задание 4: LinkedTransferQueue — transfer() vs put()
- *            Покажи разницу: transfer() ждёт consumer'а, put() — нет.
+ *            Покажи разницу: put() возвращается сразу, transfer() ждёт consumer'а.
  *
  * Задание 5: ArrayBlockingQueue fair vs unfair
- *            Покажи, что fair mode обеспечивает FIFO порядок для ожидающих потоков.
+ *            fair=true гарантирует FIFO для ожидающих потоков.
+ *            Покажи разницу поведения с fair=true и fair=false.
  */
 
 // ===== Задание 1: SynchronousQueue =====
@@ -28,19 +31,9 @@ import java.util.concurrent.*
 fun task1_synchronousQueue() {
     val queue = SynchronousQueue<String>()
 
-    // TODO: Producer:
-    //   for (i in 1..5) {
-    //     println("Producer: putting item-$i")
-    //     queue.put("item-$i")  // блокируется пока consumer не заберёт
-    //     println("Producer: item-$i taken by consumer")
-    //   }
-
-    // TODO: Consumer (с задержкой, чтобы показать блокировку):
-    //   for (i in 1..5) {
-    //     Thread.sleep(500)
-    //     val item = queue.take()
-    //     println("Consumer: got $item")
-    //   }
+    // TODO: Producer: для каждого из 5 элементов — логируй "putting", put(), логируй "taken"
+    // TODO: Consumer с задержкой 500ms: логируй "got $item"
+    // Запусти оба в потоках, дождись завершения
 
     println("SynchronousQueue demo")
 }
@@ -57,18 +50,9 @@ data class PriorityTask(
 fun task2_priorityQueue() {
     val queue = PriorityBlockingQueue<PriorityTask>()
 
-    // TODO: Положи задачи в случайном порядке:
-    //   queue.put(PriorityTask("Low priority task", 10))
-    //   queue.put(PriorityTask("CRITICAL task", 1))
-    //   queue.put(PriorityTask("Medium task", 5))
-    //   queue.put(PriorityTask("High priority task", 2))
-    //   queue.put(PriorityTask("Normal task", 7))
-
-    // TODO: Worker забирает и обрабатывает — должно быть в порядке приоритета
-    //   while (queue.isNotEmpty()) {
-    //     val task = queue.take()
-    //     println("Processing: ${task.name} (priority=${task.priority})")
-    //   }
+    // TODO: Добавь 5 задач с приоритетами 10, 1, 5, 2, 7 в указанном порядке
+    // Worker: пока очередь не пустая, take() и обработай
+    // Убедись что порядок: 1, 2, 5, 7, 10
 }
 
 // ===== Задание 3: DelayQueue =====
@@ -92,17 +76,9 @@ class ScheduledItem(
 fun task3_delayQueue() {
     val queue = DelayQueue<ScheduledItem>()
 
-    // TODO: Добавь элементы с разной задержкой:
-    //   queue.put(ScheduledItem("Task-A", 3000))  // через 3 секунды
-    //   queue.put(ScheduledItem("Task-B", 1000))  // через 1 секунду
-    //   queue.put(ScheduledItem("Task-C", 2000))  // через 2 секунды
-
-    // TODO: Worker:
-    //   repeat(3) {
-    //     val item = queue.take()  // блокируется пока delay не истечёт
-    //     println("${System.currentTimeMillis()}: Executing ${item.name}")
-    //   }
-    // Ожидаемый порядок: B (1s), C (2s), A (3s)
+    // TODO: Добавь Task-A(3s), Task-B(1s), Task-C(2s)
+    // Worker: 3 раза take() и логируй время выполнения
+    // Ожидаемый порядок: B, C, A
 }
 
 // ===== Задание 4: LinkedTransferQueue =====
@@ -110,36 +86,21 @@ fun task3_delayQueue() {
 fun task4_transferQueue() {
     val queue = LinkedTransferQueue<String>()
 
-    // TODO: Consumer с задержкой:
-    //   Thread.sleep(2000)
-    //   println("Consumer: taking...")
-    //   println("Consumer: got ${queue.take()}")
-
-    // TODO: Producer — покажи разницу:
-    //   println("put() — не ждёт consumer'а")
-    //   queue.put("item-via-put")
-    //   println("put() — вернулся сразу")
-
-    //   println("transfer() — ждёт consumer'а...")
-    //   queue.transfer("item-via-transfer")  // БЛОКИРУЕТСЯ пока consumer не заберёт!
-    //   println("transfer() — consumer забрал!")
-
-    //   println("tryTransfer() — не ждёт")
-    //   val success = queue.tryTransfer("item-try")
-    //   println("tryTransfer success: $success")  // false если нет ожидающего consumer'а
+    // TODO: Запусти consumer с задержкой 2 секунды
+    // Producer: сначала put() — должен вернуться сразу
+    //           затем transfer() — должен заблокироваться до consumer
+    //           затем tryTransfer() — вернёт false если нет ожидающего consumer
+    // Логируй каждый шаг с временными метками
 }
 
 // ===== Задание 5: Fair ArrayBlockingQueue =====
 
 fun task5_fairQueue() {
-    // TODO: Создай ArrayBlockingQueue(1, true) — fair
-    //   Заполни очередь (capacity=1, один элемент)
-    //   Запусти 5 потоков в ОПРЕДЕЛЁННОМ порядке, каждый делает queue.put()
-    //   Медленно освобождай очередь через take()
-    //   С fair=true потоки должны получить доступ в FIFO порядке
-    //   С fair=false порядок не гарантирован
-
-    // Покажи разницу запустив оба варианта
+    // TODO: Создай ArrayBlockingQueue(1, true) с одним элементом (capacity=1, заполнена)
+    // Запусти 5 потоков в определённом порядке, каждый делает put()
+    // Медленно освобождай через take() из main
+    // С fair=true потоки получают доступ в FIFO порядке — покажи это в логах
+    // Повтори с fair=false — порядок не гарантирован
 }
 
 fun main() {

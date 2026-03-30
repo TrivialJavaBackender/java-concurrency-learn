@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.LongAdder
  *
  * Задание 3: Сравни производительность AtomicLong vs LongAdder
  *            при 10 потоках, 1_000_000 инкрементов каждый.
+ *            Используй System.nanoTime() для замера.
  */
 
 // ===== Задание 1: Treiber Stack =====
@@ -25,18 +26,11 @@ class LockFreeStack<T> {
     private val top = AtomicReference<Node<T>?>(null)
 
     fun push(value: T) {
-        // TODO: CAS loop:
-        //   val oldTop = top.get()
-        //   val newTop = Node(value, oldTop)
-        //   повторяй пока top.compareAndSet(oldTop, newTop) не вернёт true
+        // TODO: Реализуй через CAS-цикл (без synchronized)
     }
 
     fun pop(): T? {
-        // TODO: CAS loop:
-        //   val oldTop = top.get() ?: return null
-        //   val newTop = oldTop.next
-        //   повторяй пока top.compareAndSet(oldTop, newTop) не вернёт true
-        //   return oldTop.value
+        // TODO: Реализуй через CAS-цикл (без synchronized)
         return null
     }
 }
@@ -47,8 +41,7 @@ class CASCounter {
     private val value = AtomicInteger(0)
 
     fun increment() {
-        // TODO: Реализуй через цикл с compareAndSet
-        // while(true) { val cur = value.get(); if (value.compareAndSet(cur, cur+1)) break }
+        // TODO: Реализуй через цикл с compareAndSet (не используй incrementAndGet)
     }
 
     fun get(): Int = value.get()
@@ -60,9 +53,8 @@ fun benchmarkAtomicVsAdder() {
     val threads = 10
     val iterations = 1_000_000L
 
-    // TODO: Замерь время для AtomicLong.incrementAndGet() и LongAdder.increment()
-    // Используй System.nanoTime()
-    // Напечатай результаты
+    // TODO: Замерь и сравни время AtomicLong и LongAdder при конкурентных инкрементах
+    // Подумай: почему LongAdder быстрее при высокой конкуренции?
     println("TODO: implement benchmark")
 }
 

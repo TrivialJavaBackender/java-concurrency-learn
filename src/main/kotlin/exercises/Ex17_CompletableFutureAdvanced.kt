@@ -5,19 +5,28 @@ import java.util.concurrent.*
 /**
  * УПРАЖНЕНИЕ 17: CompletableFuture — продвинутые паттерны
  *
- * Задание 1: Параллельный вызов нескольких API + сбор результатов в список
- *            (типичная задача на собесе)
+ * Задание 1: Параллельный вызов нескольких API + сбор результатов в список.
+ *            fetchUser для 5 userId параллельно → List<String>.
+ *            Используй allOf() и join() после него.
  *
- * Задание 2: thenCombine — объединение результатов двух независимых CF
+ * Задание 2: thenCombine — объединение двух независимых CF.
+ *            fetchUser(id) и fetchAddress(id) запускаются параллельно,
+ *            результат: "$user lives at $address".
  *
- * Задание 3: handle vs exceptionally vs whenComplete — обработка ошибок
- *            Покажи поведение каждого при успехе и ошибке.
+ * Задание 3: handle vs exceptionally vs whenComplete — обработка ошибок.
+ *            Протести каждый на успешном и упавшем CF.
+ *            Главный вопрос: какой из них НЕ меняет результат?
  *
- * Задание 4: Timeout + fallback (orTimeout / completeOnTimeout, Java 9+)
+ * Задание 4: Timeout + fallback (Java 9+).
+ *            orTimeout() — бросает TimeoutException.
+ *            completeOnTimeout() — возвращает дефолтное значение.
  *
- * Задание 5: Реализуй retry с exponential backoff через CompletableFuture
+ * Задание 5: Retry с exponential backoff.
+ *            MockApi.unreliableService() успевает только на 3-й попытке.
+ *            Реализуй retryWithBackoff(action, maxRetries, initialDelayMs).
  *
- * Задание 6: applyToEither — "гонка" двух сервисов, первый ответ побеждает
+ * Задание 6: applyToEither — "гонка" двух сервисов.
+ *            Два mirror с разной задержкой — победит быстрый.
  */
 
 // Имитация API
@@ -51,55 +60,26 @@ object MockApi {
 
 fun task1_parallelToList(): CompletableFuture<List<String>> {
     val userIds = listOf(1, 2, 3, 4, 5)
-
-    // TODO: Запусти fetchUser для каждого id параллельно
-    //   val futures = userIds.map { MockApi.fetchUser(it) }
-    //   return CompletableFuture.allOf(*futures.toTypedArray())
-    //       .thenApply { futures.map { it.join() } }
-
+    // TODO: fetchUser для каждого id параллельно, собери все результаты в список
     return CompletableFuture.completedFuture(emptyList())
 }
 
-// ===== Задание 2: thenCombine — два независимых результата =====
+// ===== Задание 2: thenCombine =====
 
 fun task2_combine(userId: Int): CompletableFuture<String> {
-    // TODO: Запусти fetchUser и fetchAddress ПАРАЛЛЕЛЬНО
-    //   Объедини результаты через thenCombine:
-    //   MockApi.fetchUser(userId)
-    //       .thenCombine(MockApi.fetchAddress(userId)) { user, address ->
-    //           "$user lives at $address"
-    //       }
-
+    // TODO: Запусти fetchUser и fetchAddress ПАРАЛЛЕЛЬНО, объедини через thenCombine
     return CompletableFuture.completedFuture("")
 }
 
-// ===== Задание 3: Обработка ошибок — три способа =====
+// ===== Задание 3: Error handling =====
 
 fun task3_errorHandling() {
-    val failing = CompletableFuture.supplyAsync<String> {
-        throw RuntimeException("Boom!")
-    }
+    val failing = CompletableFuture.supplyAsync<String> { throw RuntimeException("Boom!") }
     val succeeding = CompletableFuture.supplyAsync { "OK" }
 
-    // TODO: exceptionally — перехватить ошибку, вернуть fallback
-    //   val r1 = failing.exceptionally { ex -> "Fallback: ${ex.message}" }
-    //   println("exceptionally (fail): ${r1.join()}")   // "Fallback: Boom!"
-    //   val r1s = succeeding.exceptionally { "Fallback" }
-    //   println("exceptionally (success): ${r1s.join()}")  // "OK"
-
-    // TODO: handle — получить оба (result OR exception)
-    //   val r2 = failing.handle { result, ex ->
-    //       if (ex != null) "Handled: ${ex.message}" else result
-    //   }
-    //   println("handle (fail): ${r2.join()}")  // "Handled: Boom!"
-
-    // TODO: whenComplete — побочный эффект, НЕ МЕНЯЕТ результат
-    //   val r3 = failing.whenComplete { result, ex ->
-    //       if (ex != null) println("  whenComplete logged error: ${ex.message}")
-    //   }
-    //   try { r3.join() } catch (e: Exception) {
-    //       println("whenComplete (fail): exception still propagated!")
-    //   }
+    // TODO: exceptionally — протести на failing и succeeding
+    // TODO: handle — протести на failing и succeeding
+    // TODO: whenComplete — покажи что исключение всё равно пробрасывается
 
     println("Error handling demo")
 }
@@ -107,29 +87,9 @@ fun task3_errorHandling() {
 // ===== Задание 4: Timeout + Fallback =====
 
 fun task4_timeout() {
-    val slow = CompletableFuture.supplyAsync<String> {
-        Thread.sleep(5000)  // очень медленный
-        "Slow result"
-    }
-
-    // TODO: orTimeout — бросает TimeoutException
-    //   val r1 = slow.copy()  // Java 9: copy()
-    //       .orTimeout(1, TimeUnit.SECONDS)
-    //       .exceptionally { "Timeout! ${it.message}" }
-    //   println("orTimeout: ${r1.join()}")
-
-    // TODO: completeOnTimeout — fallback без исключения
-    //   val r2 = CompletableFuture.supplyAsync<String> { Thread.sleep(5000); "Slow" }
-    //       .completeOnTimeout("Default value", 1, TimeUnit.SECONDS)
-    //   println("completeOnTimeout: ${r2.join()}")
-
-    // Для Java 8 — ручной timeout:
-    //   val cf = CompletableFuture<String>()
-    //   val scheduler = Executors.newScheduledThreadPool(1)
-    //   scheduler.schedule({ cf.complete("Timeout fallback") }, 1, TimeUnit.SECONDS)
-    //   CompletableFuture.supplyAsync { Thread.sleep(5000); "Slow" }
-    //       .thenAccept { cf.complete(it) }
-    //   println("Manual timeout: ${cf.join()}")
+    // TODO: Создай медленный CF (sleep 5s)
+    // orTimeout(1s) + exceptionally → напечатай "Timeout: ..."
+    // completeOnTimeout("Default", 1s) → напечатай "Default value"
 
     println("Timeout demo")
 }
@@ -141,50 +101,24 @@ fun <T> retryWithBackoff(
     maxRetries: Int,
     initialDelayMs: Long = 100
 ): CompletableFuture<T> {
-    // TODO: Рекурсивная реализация:
-    //   return action().exceptionallyCompose { ex ->  // Java 12+
-    //       if (maxRetries <= 0) CompletableFuture.failedFuture(ex)
-    //       else {
-    //           println("  Retry in ${initialDelayMs}ms... (${maxRetries} left)")
-    //           val delayed = CompletableFuture<T>()
-    //           Executors.newSingleThreadScheduledExecutor().schedule({
-    //               retryWithBackoff(action, maxRetries - 1, initialDelayMs * 2)
-    //                   .thenAccept { delayed.complete(it) }
-    //                   .exceptionally { delayed.completeExceptionally(it); null }
-    //           }, initialDelayMs, TimeUnit.MILLISECONDS)
-    //           delayed
-    //       }
-    //   }
-
-    return action() // placeholder
+    // TODO: При ошибке — подождать initialDelayMs и повторить с maxRetries-1 и задержкой*2
+    // При maxRetries=0 — вернуть failed future
+    // Используй exceptionallyCompose (Java 12+) или вложенные thenCompose
+    return action()
 }
 
 fun task5_retry() {
     // TODO: val result = retryWithBackoff({ MockApi.unreliableService() }, maxRetries = 5)
-    //   println("Result: ${result.join()}")
+    // println("Result: ${result.join()}")
     println("Retry demo")
 }
 
-// ===== Задание 6: applyToEither — гонка сервисов =====
+// ===== Задание 6: applyToEither =====
 
 fun task6_race() {
-    // TODO: Два "зеркала" API с разной задержкой
-    //   val mirror1 = CompletableFuture.supplyAsync {
-    //       Thread.sleep((100..1000).random().toLong())
-    //       "Result from Mirror-1"
-    //   }
-    //   val mirror2 = CompletableFuture.supplyAsync {
-    //       Thread.sleep((100..1000).random().toLong())
-    //       "Result from Mirror-2"
-    //   }
-
-    //   val fastest = mirror1.applyToEither(mirror2) { result ->
-    //       "Winner: $result"
-    //   }
-    //   println(fastest.join())
-
-    // Бонус: acceptEither — то же, но void
-    // Бонус: runAfterEither — то же, но Runnable
+    // TODO: Два CF с разной задержкой (random 100-1000ms каждый)
+    // applyToEither — победитель применяет функцию к результату
+    // Напечатай кто выиграл
 
     println("Race demo")
 }

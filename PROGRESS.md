@@ -4,8 +4,8 @@
 
 | Модуль | Статус | Дата начала | Дата завершения |
 |--------|--------|-------------|-----------------|
-| 1. Основы потоков | ⬜ не начат | — | — |
-| 2. Locks | ⬜ не начат | — | — |
+| 1. Основы потоков | ✅ завершён | 2026-03-30 | 2026-03-30 |
+| 2. Locks | ✅ завершён | 2026-03-30 | 2026-03-30 |
 | 3. Atomic/CAS | ⬜ не начат | — | — |
 | 4. Concurrent Collections | ⬜ не начат | — | — |
 | 4+. Concurrent Collections (Deep) | ⬜ не начат | — | — |
@@ -19,10 +19,10 @@
 
 | # | Упражнение | Тема | Статус |
 |---|-----------|------|--------|
-| 01 | ThreadBasics | Потоки, synchronized | ⬜ |
-| 02 | ProducerConsumer | wait/notify | ⬜ |
-| 03 | ReentrantLockCache | ReentrantLock, Condition | ⬜ |
-| 04 | ReadWriteLock | ReadWriteLock | ⬜ |
+| 01 | ThreadBasics | Потоки, synchronized | ✅ |
+| 02 | ProducerConsumer | wait/notify | ✅ |
+| 03 | ReentrantLockCache | ReentrantLock, Condition | ✅ |
+| 04 | ReadWriteLock | ReadWriteLock | ✅ |
 | 05 | AtomicCounter | CAS, Treiber Stack, LongAdder | ⬜ |
 | 06 | ConcurrentMapWordCount | CHM merge, COWAL | ⬜ |
 | 07 | BlockingQueuePipeline | ABQ, LBQ, pipeline | ⬜ |

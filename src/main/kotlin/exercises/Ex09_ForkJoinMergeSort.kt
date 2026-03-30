@@ -7,10 +7,13 @@ import java.util.concurrent.RecursiveTask
  * УПРАЖНЕНИЕ 9: ForkJoinPool и RecursiveTask
  *
  * Задание 1: Реализуй параллельный Merge Sort через RecursiveTask.
- *            - Если массив <= THRESHOLD (16), сортируй обычным Arrays.sort
- *            - Иначе разбей на 2 половины, fork() левую, compute() правую, join()
+ *            - Если массив <= THRESHOLD (16 элементов), сортируй обычным sort()
+ *            - Иначе разбей на 2 половины: fork() одну, compute() другую, join() первую
+ *            - merge() уже реализован — используй его
  *
  * Задание 2: Реализуй параллельный поиск максимума в массиве через RecursiveTask.
+ *            Аналогичная структура: при малом размере — линейный поиск,
+ *            иначе — рекурсивное разбиение.
  *
  * Покажи ускорение на массиве из 1_000_000 элементов.
  */
@@ -26,20 +29,9 @@ class MergeSortTask(
     }
 
     override fun compute(): IntArray {
-        // TODO:
-        // Если right - left <= THRESHOLD:
-        //   val sub = array.copyOfRange(left, right)
-        //   sub.sort()
-        //   return sub
-        //
-        // val mid = (left + right) / 2
-        // val leftTask = MergeSortTask(array, left, mid)
-        // val rightTask = MergeSortTask(array, mid, right)
-        // leftTask.fork()  // запусти в другом потоке
-        // val rightResult = rightTask.compute()  // выполни в текущем
-        // val leftResult = leftTask.join()  // дождись результата
-        // return merge(leftResult, rightResult)
-
+        // TODO: Реализуй рекурсивный merge sort через fork/join
+        // При right - left <= THRESHOLD — сортируй напрямую (copyOfRange + sort)
+        // Иначе — fork левую половину, compute правую, join левую, merge результаты
         return array.copyOfRange(left, right).also { it.sort() } // placeholder
     }
 
@@ -67,9 +59,9 @@ class MaxFinderTask(
     }
 
     override fun compute(): Int {
-        // TODO: Аналогично MergeSortTask, но ищи максимум
-        // При left..right <= THRESHOLD — ищи max линейно
-        // Иначе fork/compute/join и верни max(leftMax, rightMax)
+        // TODO: Реализуй параллельный поиск максимума через fork/join
+        // При right - left <= THRESHOLD — линейный поиск в диапазоне
+        // Иначе — fork/compute/join, вернуть max(leftMax, rightMax)
         return array.copyOfRange(left, right).max()
     }
 }

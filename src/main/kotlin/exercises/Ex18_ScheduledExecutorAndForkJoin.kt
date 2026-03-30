@@ -8,19 +8,25 @@ import java.util.concurrent.atomic.AtomicLong
  * УПРАЖНЕНИЕ 18: ScheduledExecutorService + ForkJoinPool — глубокое погружение
  *
  * Задание 1: scheduleAtFixedRate vs scheduleWithFixedDelay
- *            Визуализируй разницу: задача занимает случайное время (100-600ms),
- *            period/delay = 500ms. Покажи когда запускается каждая итерация.
+ *            Задача занимает случайное время (100-600ms), period/delay = 500ms.
+ *            Покажи с timestamp когда запускается каждая итерация.
+ *            Ключевой вопрос: что происходит если задача длиннее периода?
  *
- * Задание 2: Реализуй rate limiter на ScheduledExecutorService.
- *            Максимум N операций в секунду. Задачи сверх лимита откладываются.
+ * Задание 2: Реализуй SimpleRateLimiter на основе Semaphore + ScheduledExecutor.
+ *            Каждую секунду пополняет permits до permitsPerSecond.
+ *            20 задач, не больше 5 ops/sec.
  *
- * Задание 3: ForkJoinPool — параллельный поиск в отсортированном массиве.
- *            Разбей массив на подзадачи, каждая ищет в своём диапазоне.
+ * Задание 3: ForkJoinPool — параллельный поиск элемента в массиве.
+ *            При размере <= THRESHOLD — линейный поиск.
+ *            Иначе — fork левую, compute правую, выбрать найденный.
  *
- * Задание 4: ForkJoinPool — параллельный map-reduce.
- *            Подсчитай среднее значение большого массива через fork/join.
+ * Задание 4: ForkJoinPool — map-reduce для подсчёта среднего.
+ *            RecursiveTask возвращает Pair(sum, count).
+ *            Сравни с array.average().
  *
  * Задание 5: Покажи проблему с commonPool() и блокирующими операциями.
+ *            Запусти parallelism*2 задач с Thread.sleep() в commonPool.
+ *            Почему это плохо? Как исправить?
  */
 
 // ===== Задание 1: Rate vs Delay =====
@@ -28,29 +34,16 @@ import java.util.concurrent.atomic.AtomicLong
 fun task1_rateVsDelay() {
     val scheduler = Executors.newScheduledThreadPool(2)
     val startTime = System.currentTimeMillis()
-    val iteration = AtomicInteger(0)
-
     fun elapsed() = System.currentTimeMillis() - startTime
 
-    // TODO: scheduleAtFixedRate — запуск каждые 500ms (по часам)
-    //   val rateTask = scheduler.scheduleAtFixedRate({
-    //       val i = iteration.incrementAndGet()
-    //       println("[Rate] Iteration $i at ${elapsed()}ms")
-    //       Thread.sleep((100..600).random().toLong())  // задача дольше периода?
-    //   }, 0, 500, TimeUnit.MILLISECONDS)
+    // TODO: scheduleAtFixedRate — запуск каждые 500ms (фиксированная точка по часам)
+    // Каждая итерация: логируй elapsed(), затем sleep рандомное 100-600ms
+    // Что происходит если sleep > 500ms?
 
     // TODO: scheduleWithFixedDelay — 500ms ПОСЛЕ завершения предыдущей
-    //   val delayIteration = AtomicInteger(0)
-    //   val delayTask = scheduler.scheduleWithFixedDelay({
-    //       val i = delayIteration.incrementAndGet()
-    //       println("[Delay] Iteration $i at ${elapsed()}ms")
-    //       Thread.sleep((100..600).random().toLong())
-    //   }, 0, 500, TimeUnit.MILLISECONDS)
+    // Та же логика, другое поведение
 
-    // Thread.sleep(5000)
-    // rateTask.cancel(false)
-    // delayTask.cancel(false)
-    // scheduler.shutdown()
+    // Запусти 5 секунд, cancel оба, shutdown
 
     println("Rate vs Delay demo")
 }
@@ -62,15 +55,12 @@ class SimpleRateLimiter(permitsPerSecond: Int) {
     private val semaphore = Semaphore(permitsPerSecond)
 
     init {
-        // TODO: Каждую секунду пополняй permits
-        //   scheduler.scheduleAtFixedRate({
-        //       val toRelease = permitsPerSecond - semaphore.availablePermits()
-        //       if (toRelease > 0) semaphore.release(toRelease)
-        //   }, 1, 1, TimeUnit.SECONDS)
+        // TODO: Каждую секунду пополняй semaphore до permitsPerSecond
+        // Подсказка: сколько нужно release()? (permitsPerSecond - semaphore.availablePermits())
     }
 
     fun acquire() {
-        // TODO: semaphore.acquire() — блокируется если лимит исчерпан
+        // TODO: Блокирует если лимит исчерпан
     }
 
     fun shutdown() {
@@ -80,8 +70,8 @@ class SimpleRateLimiter(permitsPerSecond: Int) {
 
 fun task2_rateLimiter() {
     // TODO: Создай rate limiter на 5 ops/sec
-    //   Запусти 20 задач, каждая делает rateLimiter.acquire() перед работой
-    //   Покажи что не больше 5 задач выполняются в секунду
+    // 20 задач — каждая acquire() + логируй время + "работает"
+    // Убедись что в каждую секунду выполняется не больше 5 задач
 
     println("Rate limiter demo")
 }
@@ -100,36 +90,20 @@ class ParallelSearch(
     }
 
     override fun compute(): Int {
-        // TODO:
-        // if (hi - lo <= THRESHOLD) {
-        //     // Линейный поиск в диапазоне
-        //     for (i in lo until hi) {
-        //         if (array[i] == target) return i
-        //     }
-        //     return -1
-        // }
-        // val mid = (lo + hi) / 2
-        // val left = ParallelSearch(array, target, lo, mid)
-        // val right = ParallelSearch(array, target, mid, hi)
-        // left.fork()
-        // val rightResult = right.compute()
-        // val leftResult = left.join()
-        // return if (leftResult != -1) leftResult else rightResult
-
-        return -1 // placeholder
+        // TODO: При hi-lo <= THRESHOLD — линейный поиск в диапазоне, вернуть индекс или -1
+        // Иначе: fork левую половину, compute правую, join левую
+        // Вернуть первый найденный (не -1)
+        return -1
     }
 }
 
 fun task3_parallelSearch() {
     val size = 1_000_000
-    val array = IntArray(size) { it * 2 }  // чётные числа
+    val array = IntArray(size) { it * 2 }  // чётные числа 0, 2, 4, ...
     val target = 777_776
 
-    // TODO:
-    // val pool = ForkJoinPool()
-    // val index = pool.invoke(ParallelSearch(array, target, 0, array.size))
-    // println("Found $target at index $index")
-    // println("Verify: array[$index] = ${array[index]}")
+    // TODO: Используй ForkJoinPool для поиска
+    // Напечатай индекс и verify: array[index] == target
 
     println("Parallel search demo")
 }
@@ -140,28 +114,16 @@ class AverageTask(
     private val array: DoubleArray,
     private val lo: Int,
     private val hi: Int
-) : RecursiveTask<Pair<Double, Int>>() { // (sum, count)
+) : RecursiveTask<Pair<Double, Int>>() {
 
     companion object {
         const val THRESHOLD = 5000
     }
 
     override fun compute(): Pair<Double, Int> {
-        // TODO:
-        // if (hi - lo <= THRESHOLD) {
-        //     var sum = 0.0
-        //     for (i in lo until hi) sum += array[i]
-        //     return Pair(sum, hi - lo)
-        // }
-        // val mid = (lo + hi) / 2
-        // val left = AverageTask(array, lo, mid)
-        // val right = AverageTask(array, mid, hi)
-        // left.fork()
-        // val (rSum, rCount) = right.compute()
-        // val (lSum, lCount) = left.join()
-        // return Pair(lSum + rSum, lCount + rCount)
-
-        return Pair(0.0, 0) // placeholder
+        // TODO: При hi-lo <= THRESHOLD — суммируй линейно, верни Pair(sum, count)
+        // Иначе: fork/compute/join, объедини пары через сложение
+        return Pair(0.0, 0)
     }
 }
 
@@ -169,12 +131,8 @@ fun task4_mapReduceAverage() {
     val size = 1_000_000
     val array = DoubleArray(size) { Math.random() * 100 }
 
-    // TODO:
-    // val pool = ForkJoinPool()
-    // val (sum, count) = pool.invoke(AverageTask(array, 0, array.size))
-    // val average = sum / count
-    // println("ForkJoin average: $average")
-    // println("Direct average: ${array.average()}")
+    // TODO: ForkJoinPool.invoke(AverageTask(...)), вычисли среднее
+    // Сравни с array.average() — должны совпасть
 
     println("Map-reduce average demo")
 }
@@ -182,24 +140,11 @@ fun task4_mapReduceAverage() {
 // ===== Задание 5: commonPool blocking problem =====
 
 fun task5_commonPoolProblem() {
-    // TODO: Покажи проблему:
-    //   val parallelism = ForkJoinPool.commonPool().parallelism
-    //   println("Common pool parallelism: $parallelism")
-
-    //   // Запусти parallelism блокирующих задач в commonPool
-    //   val futures = (1..parallelism * 2).map {
-    //       CompletableFuture.supplyAsync {
-    //           println("Task-$it on ${Thread.currentThread().name}")
-    //           Thread.sleep(2000)  // Блокирует carrier!
-    //           "Result-$it"
-    //       }
-    //   }
-    //   // Все задачи завершатся, но первые parallelism заблокируют пул
-    //   // Остальные будут ждать. Общее время ≈ 4 секунды вместо 2.
-
-    //   // Решение: свой executor
-    //   val myPool = Executors.newFixedThreadPool(20)
-    //   CompletableFuture.supplyAsync({ blockingWork() }, myPool)
+    // TODO: Узнай parallelism у ForkJoinPool.commonPool()
+    // Запусти parallelism*2 задач через CompletableFuture.supplyAsync (использует commonPool)
+    // Каждая задача: Thread.sleep(2000)
+    // Замерь общее время — почему оно ~4s а не ~2s?
+    // Исправь: создай собственный Executors.newFixedThreadPool(20) и передай его в supplyAsync
 
     println("commonPool blocking demo")
 }

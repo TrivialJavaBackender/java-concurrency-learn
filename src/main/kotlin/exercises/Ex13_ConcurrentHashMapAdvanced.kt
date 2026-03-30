@@ -7,20 +7,24 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * УПРАЖНЕНИЕ 13: ConcurrentHashMap — продвинутые операции
  *
- * Задание 1: Реализуй thread-safe кэш с ленивой инициализацией через computeIfAbsent.
- *            Покажи, что вычисление происходит ровно 1 раз даже при 100 конкурентных запросах.
+ * Задание 1: Thread-safe кэш с ленивой инициализацией через computeIfAbsent.
+ *            Докажи, что вычисление происходит ровно 1 раз даже при 100 конкурентных запросах.
+ *            Подсчитай вызовы loader через AtomicInteger.
  *
- * Задание 2: Реализуй concurrent frequency counter используя merge().
- *            10 потоков читают "логи" (массивы строк) и считают частоту каждого URL.
+ * Задание 2: Concurrent frequency counter через merge().
+ *            3 потока читают "логи" (массивы URL) и считают частоту каждого.
+ *            Используй merge() — без synchronized, без race condition.
  *
- * Задание 3: Используй bulk operations (forEach, reduce, search) с parallelismThreshold.
- *            - forEach: напечатай все записи с count > 100
- *            - reduce: найди суммарное количество
- *            - search: найди первый ключ с count > 1000
+ * Задание 3: Bulk operations (forEach, reduce, search) с parallelismThreshold.
+ *            - forEach: напечатай все записи с count > 1500
+ *            - reduce: найди суммарное количество через reduceValuesToLong
+ *            - search: найди первый ключ с count > 1900
+ *            Подумай: что означает parallelismThreshold?
  *
- * Задание 4: Покажи разницу между compute() и merge().
- *            compute() — полный контроль (может удалить запись, вернув null).
- *            merge() — только для агрегации существующего с новым.
+ * Задание 4: compute() vs merge() — в чём разница?
+ *            Реализуй "expiring counter": инкрементируй счётчик,
+ *            но при превышении 5 — удали запись (сброс).
+ *            Запусти 10 потоков, каждый делает 3 инкремента ключа "counter".
  */
 
 // ===== Задание 1: Lazy Cache =====
@@ -31,11 +35,7 @@ class LazyCache<K, V>(private val loader: (K) -> V) {
 
     fun get(key: K): V {
         // TODO: Используй computeIfAbsent
-        // Внутри loader — инкрементируй computeCount (чтобы доказать одноразовость)
-        // return cache.computeIfAbsent(key) { k ->
-        //     computeCount.incrementAndGet()
-        //     loader(k)
-        // }
+        // Внутри loader — инкрементируй computeCount
         return loader(key) // placeholder
     }
 }
@@ -49,12 +49,12 @@ fun task1_lazyCache() {
     val latch = CountDownLatch(1)
     val threads = (1..100).map {
         Thread {
-            latch.await() // все стартуют одновременно
+            latch.await()
             cache.get("shared-key")
         }
     }
     threads.forEach { it.start() }
-    latch.countDown() // GO!
+    latch.countDown()
     threads.forEach { it.join() }
 
     println("Compute count: ${cache.computeCount.get()} (expected: 1)")
@@ -70,10 +70,9 @@ fun task2_frequencyCounter() {
     )
     val frequency = ConcurrentHashMap<String, Int>()
 
-    // TODO: Для каждого массива логов запусти поток.
-    // Каждый поток использует merge() для подсчёта:
-    //   logs.forEach { url -> frequency.merge(url, 1, Integer::sum) }
-    // Дождись всех потоков, напечатай результат.
+    // TODO: Для каждого массива логов запусти отдельный поток
+    // Используй merge() для накопления счётчиков без synchronized
+    // Дождись всех потоков, напечатай результат
 
     println("Frequency: $frequency")
 }
@@ -82,26 +81,13 @@ fun task2_frequencyCounter() {
 
 fun task3_bulkOperations() {
     val stats = ConcurrentHashMap<String, Long>()
-    // Заполняем данными
     for (i in 1..1000) {
         stats["page-$i"] = (Math.random() * 2000).toLong()
     }
 
-    // TODO: forEach с parallelismThreshold = 100
-    // Напечатай все страницы с > 1500 просмотрами
-    // stats.forEach(100) { key, value ->
-    //     if (value > 1500) println("  $key: $value views")
-    // }
-
-    // TODO: reduce — суммарное количество просмотров
-    // val total = stats.reduceValuesToLong(100, { it }, 0L, Long::plus)
-    // println("Total views: $total")
-
+    // TODO: forEach с parallelismThreshold = 100 — напечатай страницы с > 1500 просмотров
+    // TODO: reduceValuesToLong — суммарное количество просмотров
     // TODO: search — первая страница с > 1900 просмотрами
-    // val found = stats.search(100) { key, value ->
-    //     if (value > 1900) "$key=$value" else null
-    // }
-    // println("Found: $found")
 }
 
 // ===== Задание 4: compute vs merge =====
@@ -121,12 +107,10 @@ fun task4_computeVsMerge() {
     }
 
     // TODO: Реализуй "expiring counter" через compute():
-    //   - Инкрементируй счётчик
-    //   - Если счётчик > 5, удали запись (верни null) — "сброс"
-    //   - Запусти 10 потоков, каждый делает 3 инкремента ключа "counter"
-    //   - Напечатай финальное значение (будет зависеть от порядка)
+    // Инкрементируй "counter", при превышении 5 — удаляй (возвращай null из лямбды)
+    // 10 потоков по 3 инкремента — что получится?
 
-    println("compute vs merge demo done")
+    println("compute vs merge demo done, visits=${map["visits"]}")
 }
 
 fun main() {

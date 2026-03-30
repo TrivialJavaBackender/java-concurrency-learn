@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * Задание 1: Параллельный подсчёт слов.
  *            Раздели текст на 4 части, каждый поток считает слова в своей части.
- *            Используй ConcurrentHashMap.merge() для агрегации.
+ *            Используй ConcurrentHashMap.merge() для агрегации результатов.
  *
  * Задание 2: Покажи разницу между ConcurrentHashMap.putIfAbsent() и обычным put().
  *            Запусти гонку — 10 потоков одновременно пытаются положить значение по одному ключу.
@@ -24,11 +24,9 @@ import java.util.concurrent.CopyOnWriteArrayList
 fun parallelWordCount(text: String): Map<String, Int> {
     val result = ConcurrentHashMap<String, Int>()
     val words = text.lowercase().split("\\s+".toRegex())
-    val chunkSize = (words.size + 3) / 4
 
-    // TODO: Раздели words на 4 чанка
-    // Каждый поток обрабатывает свой чанк:
-    //   words.forEach { result.merge(it, 1) { a, b -> a + b } }
+    // TODO: Раздели words на 4 чанка, обработай каждый в отдельном потоке
+    // Используй merge() для безопасного накопления результатов
     // Дождись всех потоков
 
     return result
@@ -38,8 +36,10 @@ fun parallelWordCount(text: String): Map<String, Int> {
 
 fun putIfAbsentRace() {
     val map = ConcurrentHashMap<String, String>()
-    // TODO: 10 потоков одновременно делают map.putIfAbsent("winner", "Thread-$i")
-    // Напечатай кто "выиграл" — значение по ключу "winner"
+
+    // TODO: 10 потоков одновременно пытаются вставить значение по ключу "winner"
+    // Используй putIfAbsent — только один поток должен победить
+    // Напечатай результат: кто "выиграл"
 }
 
 // ===== Задание 3: Event Bus =====
@@ -48,16 +48,15 @@ class SimpleEventBus {
     private val listeners = CopyOnWriteArrayList<(String) -> Unit>()
 
     fun subscribe(listener: (String) -> Unit) {
-        // TODO: listeners.add(listener)
+        // TODO
     }
 
     fun unsubscribe(listener: (String) -> Unit) {
-        // TODO: listeners.remove(listener)
+        // TODO
     }
 
     fun publish(event: String) {
-        // TODO: listeners.forEach { it(event) }
-        // Безопасно даже если кто-то подписывается/отписывается во время итерации
+        // TODO: Почему CopyOnWriteArrayList безопасен при конкурентной итерации?
     }
 }
 

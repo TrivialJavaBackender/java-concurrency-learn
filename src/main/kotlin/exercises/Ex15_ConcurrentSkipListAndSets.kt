@@ -9,39 +9,37 @@ import java.util.concurrent.CopyOnWriteArraySet
  * УПРАЖНЕНИЕ 15: ConcurrentSkipListMap, Sets, newKeySet
  *
  * Задание 1: ConcurrentSkipListMap — sorted leaderboard
- *            Несколько потоков одновременно обновляют счёт игроков.
- *            Используй subMap/headMap/tailMap для range queries.
+ *            5 потоков одновременно обновляют счёт 10 игроков.
+ *            После завершения — выведи Top 5 (по убыванию счёта).
+ *            Используй tailMap() для получения всех игроков с score > N.
+ *            Подумай: как хранить уникальные ключи если score может совпадать?
  *
  * Задание 2: ConcurrentSkipListSet — sorted unique events
- *            Потоки добавляют timestamped события.
- *            Запроси все события за последние N миллисекунд.
+ *            3 потока добавляют timestamped события.
+ *            Запроси все события за последние 100ms через tailSet().
  *
  * Задание 3: ConcurrentHashMap.newKeySet() vs CopyOnWriteArraySet
- *            Benchmark: 10 потоков добавляют и читают.
- *            Покажи когда какой выбрать.
+ *            Benchmark: 10 потоков добавляют элементы конкурентно.
+ *            Сравни время записи и время итерации для обоих вариантов.
+ *            Объясни когда что использовать.
  */
 
 // ===== Задание 1: Sorted Leaderboard =====
 
 class Leaderboard {
-    // Ключ: -score (для desc сортировки), значение: player name
-    // Или используй ConcurrentSkipListMap с Comparator.reverseOrder()
     private val scores = ConcurrentSkipListMap<Int, String>()
     private val playerScores = ConcurrentHashMap<String, Int>()
 
     fun updateScore(player: String, score: Int) {
-        // TODO:
-        //   val oldScore = playerScores.put(player, score)
-        //   if (oldScore != null) scores.remove(oldScore)  // удали старый
-        //   scores.put(score, player)
-        //
-        // ⚠️ Это упрощённая версия — что если два игрока с одинаковым счётом?
-        // Для продакшена нужен составной ключ или другая структура
+        // TODO: Обнови счёт игрока атомарно:
+        // 1. Сохрани новый счёт в playerScores
+        // 2. Удали старый score из scores (если был)
+        // 3. Вставь новый
     }
 
     fun topN(n: Int): List<Pair<String, Int>> {
         // TODO: Верни N лучших (наибольший score первым)
-        //   return scores.descendingMap().entries.take(n).map { it.value to it.key }
+        // Используй descendingMap()
         return emptyList()
     }
 
@@ -54,9 +52,8 @@ class Leaderboard {
 fun task1_leaderboard() {
     val board = Leaderboard()
 
-    // TODO: Запусти 5 потоков, каждый обновляет 20 случайных игроков с случайным счётом
-    // Дождись всех
-    // Напечатай Top 5
+    // TODO: 5 потоков, каждый обновляет счёт 10 случайных игроков (игроки: "player-1".."player-10")
+    // Дождись всех, напечатай Top 5 и игроков с score > 500
 
     println("Leaderboard demo")
 }
@@ -73,14 +70,10 @@ data class TimestampedEvent(
 fun task2_sortedEvents() {
     val events = ConcurrentSkipListSet<TimestampedEvent>()
 
-    // TODO: 3 потока добавляют события с текущим timestamp + случайное смещение
-    //   events.add(TimestampedEvent(System.currentTimeMillis(), "Event from Thread-$i"))
-    //   Thread.sleep(random 10-50ms)
-
-    // TODO: Запроси события за последние 100ms:
-    //   val cutoff = TimestampedEvent(System.currentTimeMillis() - 100, "")
-    //   val recent = events.tailSet(cutoff)
-    //   println("Recent events (last 100ms): ${recent.size}")
+    // TODO: 3 потока, каждый добавляет 10 событий с текущим timestamp
+    // Дождись всех потоков
+    // Запроси события за последние 100ms через tailSet()
+    // Напечатай количество недавних событий
 
     println("Sorted events demo")
 }
@@ -91,20 +84,13 @@ fun task3_setBenchmark() {
     val iterations = 10_000
     val threads = 10
 
-    // ConcurrentHashMap.newKeySet() — для частых записей
     val chmSet = ConcurrentHashMap.newKeySet<String>()
-
-    // CopyOnWriteArraySet — для редких записей, частых чтений
     val cowSet = CopyOnWriteArraySet<String>()
 
-    // TODO: Benchmark записи
-    //   Замерь время добавления iterations элементов из threads потоков для каждого Set
-
-    // TODO: Benchmark чтения
-    //   Замерь время итерации (forEach) при конкурентных записях для каждого Set
-
-    // TODO: Напечатай результаты
-    //   Ожидание: newKeySet быстрее для записи, COWAL быстрее для чтения (при маленьком размере)
+    // TODO: Замерь время параллельного добавления для обоих Set
+    // TODO: Замерь время итерации (forEach) при параллельных записях для обоих
+    // TODO: Напечатай и сравни результаты
+    // Объясни: когда выбрать newKeySet, а когда CopyOnWriteArraySet?
 
     println("Set benchmark demo")
 }
