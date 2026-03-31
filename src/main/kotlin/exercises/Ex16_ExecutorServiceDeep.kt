@@ -4,130 +4,201 @@ import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * УПРАЖНЕНИЕ 16: ThreadPoolExecutor — глубокое погружение
+ * УПРАЖНЕНИЕ 16: Виды thread pools — различия, опасности, выбор
  *
- * Задание 1: Создай ThreadPoolExecutor и наблюдай за его поведением:
- *            - corePoolSize=2, maxPoolSize=4, queue=ArrayBlockingQueue(3)
- *            - Что происходит с задачами 1-2, 3-5, 6-7, 8+?
- *            - Используй CallerRunsPolicy и наблюдай когда она срабатывает
+ * Задание 1: Наблюдение за поведением всех pool-типов
+ *   Запусти одни и те же 20 задач (каждая sleep 500ms) на каждом пуле:
+ *   - newFixedThreadPool(4)
+ *   - newCachedThreadPool()
+ *   - newSingleThreadExecutor()
+ *   - newWorkStealingPool()
+ *   Для каждого: замерь общее время и залогируй имена потоков.
+ *   Вопросы: почему CachedPool быстрее Fixed при burst-нагрузке?
+ *            почему SingleThread гарантирует порядок, а WorkStealing — нет?
  *
- * Задание 2: Реализуй NamedThreadFactory — потоки с именем "$prefix-worker-N",
- *            daemon=false, uncaughtExceptionHandler.
+ * Задание 2: Опасности каждого пула
+ *   a) newCachedThreadPool + 10000 задач по 10s — что происходит с памятью/потоками?
+ *      Наблюдай через Thread.activeCount(). Почему это опасно?
+ *   b) newFixedThreadPool(4) + медленные задачи — submit 10000 запросов.
+ *      Что происходит с очередью? Как это приводит к OOM?
+ *      Используй ThreadPoolExecutor.getQueue().size() для мониторинга.
+ *   c) Исправь каждый вариант: CachedPool → ограничь через Semaphore;
+ *      FixedPool → замени unbounded queue на ArrayBlockingQueue.
  *
- * Задание 3: Реализуй RetryRejectionHandler — сохраняет отклонённые задачи,
- *            retryAll() повторно отправляет их когда пул освободится.
+ * Задание 3: ThreadPoolExecutor — ручная настройка
+ *   Создай пул: core=2, max=6, keepAlive=30s, queue=ArrayBlockingQueue(10).
+ *   Submit 20 задач и логируй для каждой: что произошло?
+ *   - задачи 1-2: идут в core threads
+ *   - задачи 3-12: идут в очередь (queue.size растёт)
+ *   - задачи 13-18: создаются новые потоки (core..max)
+ *   - задачи 19-20: RejectionHandler срабатывает
+ *   Подбери правильные задержки и размеры чтобы увидеть все 4 стадии.
  *
- * Задание 4: Graceful shutdown — корректное завершение пула:
- *            shutdown() → awaitTermination(5s) → если timeout: shutdownNow()
+ * Задание 4: Rejection Policies — сравни все четыре
+ *   Используй маленький пул (core=1, max=1, queue=ArrayBlockingQueue(1)).
+ *   Submit 5 задач и наблюдай поведение каждой политики:
+ *   - AbortPolicy (по умолчанию): бросает RejectedExecutionException
+ *   - CallerRunsPolicy: задача выполняется в вызывающем потоке (замедляет producer)
+ *   - DiscardPolicy: молча выбрасывает задачу
+ *   - DiscardOldestPolicy: выбрасывает самую старую из очереди, добавляет новую
+ *   Напечатай в каком потоке выполнилась каждая задача.
  *
- * Задание 5: invokeAll vs invokeAny vs ExecutorCompletionService.
- *            Покажи разницу поведения на 5 задачах с разным временем выполнения.
- *            Подумай: когда использовать каждый вариант?
+ * Задание 5: invokeAll vs invokeAny vs ExecutorCompletionService
+ *   5 задач с разным временем выполнения (100ms, 500ms, 200ms, 800ms, 50ms).
+ *   - invokeAll: ждёт все, верни список результатов в порядке submit
+ *   - invokeAny: верни результат самой быстрой, остальные отмени
+ *   - CompletionService: обрабатывай результаты по мере готовности (FIFO by completion)
+ *   Замерь общее время каждого подхода. Когда что использовать?
+ *
+ * Задание 6: Custom ThreadFactory + Graceful Shutdown
+ *   Реализуй NamedThreadFactory: имя "$prefix-worker-N", daemon=false,
+ *   uncaughtExceptionHandler (логирует ошибку и имя потока).
+ *   Graceful shutdown: shutdown() → awaitTermination(5s) → если не завершился: shutdownNow().
+ *   Напечатай сколько задач не успело запуститься.
  */
 
-// ===== Задание 1: ThreadPoolExecutor наблюдение =====
+// ===== Задание 1: Поведение всех pool-типов =====
 
-fun task1_observeThreadPool() {
-    val activeCount = AtomicInteger(0)
+fun task1_allPoolTypes() {
+    val taskCount = 20
+    val taskDuration = 500L
 
-    // TODO: Создай ThreadPoolExecutor (core=2, max=4, queue=ArrayBlockingQueue(3), CallerRunsPolicy)
-    // Submit 10 задач (каждая sleep 2000ms), логируй имя потока и активное количество
-    // Наблюдай: какие задачи идут в core, какие в очередь, какие создают новые потоки, какие в caller
-
-    println("ThreadPool observation demo")
-}
-
-// ===== Задание 2: Custom ThreadFactory =====
-
-class NamedThreadFactory(private val prefix: String) : ThreadFactory {
-    private val counter = AtomicInteger(0)
-
-    override fun newThread(r: Runnable): Thread {
-        // TODO: Создай поток с именем "$prefix-worker-N"
-        // Установи daemon=false и uncaughtExceptionHandler (логирует ошибку)
-        return Thread(r) // placeholder
-    }
-}
-
-fun task2_customThreadFactory() {
-    // TODO: Создай FixedThreadPool(3) с NamedThreadFactory("my-pool")
-    // Submit 5 задач, каждая печатает Thread.currentThread().name
-    // Ожидаемые имена: my-pool-worker-0, my-pool-worker-1, my-pool-worker-2
-
-    println("Custom ThreadFactory demo")
-}
-
-// ===== Задание 3: Custom RejectionHandler =====
-
-class RetryRejectionHandler : RejectedExecutionHandler {
-    val rejected = ConcurrentLinkedQueue<Runnable>()
-
-    override fun rejectedExecution(r: Runnable, executor: ThreadPoolExecutor) {
-        // TODO: Сохрани задачу в rejected, залогируй факт отказа
+    fun runTasks(name: String, executor: ExecutorService) {
+        val start = System.currentTimeMillis()
+        val futures = (1..taskCount).map { i ->
+            executor.submit(Callable {
+                Thread.sleep(taskDuration)
+                Thread.currentThread().name
+            })
+        }
+        val threadNames = futures.map { it.get() }.toSet()
+        val elapsed = System.currentTimeMillis() - start
+        println("[$name] time=${elapsed}ms, unique threads=${threadNames.size}")
+        executor.shutdown()
     }
 
-    fun retryAll(executor: ExecutorService) {
-        // TODO: Повторно отправь все задачи из rejected в executor
+    // TODO: Запусти runTasks для каждого типа пула:
+    // Executors.newFixedThreadPool(4)
+    // Executors.newCachedThreadPool()
+    // Executors.newSingleThreadExecutor()
+    // Executors.newWorkStealingPool()
+
+    // Для SingleThread дополнительно: убедись что задачи выполняются строго по порядку submit
+    // Для WorkStealing: объясни почему порядок не гарантирован
+}
+
+// ===== Задание 2: Опасности пулов =====
+
+fun task2_dangers() {
+    println("--- 2a: CachedPool thread explosion ---")
+    // TODO: Создай newCachedThreadPool(), submit 200 задач по 5 секунд каждая
+    // Через каждую секунду печатай Thread.activeCount()
+    // Остановись через 3 секунды (не жди завершения)
+    // Что происходит с количеством потоков? Почему это опасно в production?
+
+    println("--- 2b: FixedPool queue growth ---")
+    // TODO: Создай newFixedThreadPool(2) как ThreadPoolExecutor (чтобы получить доступ к getQueue())
+    // Submit 100 задач по 1 секунде, каждые 100ms печатай queue.size
+    // Остановись через 2 секунды
+    // Что случится с памятью если задач будут миллионы?
+
+    println("--- 2c: Fix с ограниченной очередью ---")
+    // TODO: Создай ThreadPoolExecutor(2, 4, 60s, ArrayBlockingQueue(10), CallerRunsPolicy)
+    // Submit те же 100 задач — что изменилось?
+}
+
+// ===== Задание 3: ThreadPoolExecutor — 4 стадии =====
+
+fun task3_threadPoolExecutor() {
+    // TODO: Создай ThreadPoolExecutor(core=2, max=6, keepAlive=30s, queue=ArrayBlockingQueue(10))
+    // Submit 20 задач (sleep 2000ms каждая), для каждой логируй:
+    //   "[Task-N] submitted | pool=${executor.poolSize} | queue=${executor.queue.size} | active=${executor.activeCount}"
+    // Должны быть видны все 4 стадии: core → queue → max → rejection
+
+    println("ThreadPoolExecutor stages demo")
+}
+
+// ===== Задание 4: Rejection Policies =====
+
+fun task4_rejectionPolicies() {
+    val policies = listOf(
+        "AbortPolicy" to ThreadPoolExecutor.AbortPolicy(),
+        "CallerRunsPolicy" to ThreadPoolExecutor.CallerRunsPolicy(),
+        "DiscardPolicy" to ThreadPoolExecutor.DiscardPolicy(),
+        "DiscardOldestPolicy" to ThreadPoolExecutor.DiscardOldestPolicy(),
+    )
+
+    for ((name, policy) in policies) {
+        println("\n--- $name ---")
+        // TODO: Создай ThreadPoolExecutor(1, 1, 0s, ArrayBlockingQueue(1), policy)
+        // Submit 5 задач (sleep 1000ms каждая), для каждой:
+        //   - обработай RejectedExecutionException (для AbortPolicy)
+        //   - логируй в каком потоке выполнилась задача
+        // shutdown и awaitTermination
     }
-}
-
-fun task3_customRejectionHandler() {
-    val handler = RetryRejectionHandler()
-
-    // TODO: Создай пул (core=1, max=1, queue=ArrayBlockingQueue(1)) с handler
-    // Submit 5 задач (sleep 1000ms) — 3 будут отклонены
-    // После завершения первых задач — retryAll()
-    // Дождись всех
-
-    println("Custom rejection handler demo")
-}
-
-// ===== Задание 4: Graceful Shutdown =====
-
-fun task4_gracefulShutdown() {
-    val executor = Executors.newFixedThreadPool(3)
-
-    // TODO: Submit 10 задач (sleep 2000ms каждая)
-    // shutdown() — больше не принимает новые
-    // awaitTermination(5s) — если не завершились: shutdownNow()
-    // Лог: сколько задач не успело запуститься
-
-    executor.shutdown()
 }
 
 // ===== Задание 5: invokeAll vs invokeAny vs CompletionService =====
 
 fun task5_invocationStrategies() {
-    val executor = Executors.newFixedThreadPool(3)
-    val tasks = (1..5).map { i ->
+    val executor = Executors.newFixedThreadPool(5)
+    val delays = listOf(100L, 500L, 200L, 800L, 50L)
+    val tasks = delays.mapIndexed { i, delay ->
         Callable {
-            val delay = (Math.random() * 2000).toLong()
             Thread.sleep(delay)
-            "Result-$i (took ${delay}ms)"
+            "Result-${i + 1} (${delay}ms)"
         }
     }
 
-    // TODO: invokeAll — ждёт ВСЕ, напечатай результаты
-    // TODO: invokeAny — возвращает ПЕРВЫЙ успешный, напечатай его
-    // TODO: ExecutorCompletionService — submit задачи, take() результаты по мере готовности
-    // Подумай: в чём разница? Когда что использовать?
+    // TODO: invokeAll — ждёт все, результаты в порядке submit
+    // Замерь время: должно быть ~800ms (ждёт самую медленную)
+
+    // TODO: invokeAny — возвращает первый успешный (~50ms), остальные отменяет
+
+    // TODO: ExecutorCompletionService — submit все, take() результаты по мере готовности
+    // Порядок: Result-5 (50ms), Result-1 (100ms), Result-3 (200ms), ...
 
     executor.shutdown()
 }
 
+// ===== Задание 6: Custom ThreadFactory + Graceful Shutdown =====
+
+class NamedThreadFactory(private val prefix: String) : ThreadFactory {
+    private val counter = AtomicInteger(0)
+
+    override fun newThread(r: Runnable): Thread {
+        // TODO: имя "$prefix-worker-N", daemon=false
+        // uncaughtExceptionHandler: логирует "[prefix-worker-N] uncaught: message"
+        return Thread(r) // placeholder
+    }
+}
+
+fun task6_shutdownAndFactory() {
+    // TODO: Создай FixedThreadPool(3) с NamedThreadFactory("my-pool")
+    // Submit 10 задач (sleep 1000ms каждая)
+    // Через 2 секунды начни graceful shutdown:
+    //   shutdown() → awaitTermination(3s) → если timeout: val notStarted = shutdownNow()
+    // Напечатай сколько задач не успело запуститься
+
+    println("Graceful shutdown demo")
+}
+
 fun main() {
-    println("=== Task 1: Observe ThreadPool ===")
-    task1_observeThreadPool()
+    println("=== Task 1: All Pool Types ===")
+    task1_allPoolTypes()
 
-    println("\n=== Task 2: Custom ThreadFactory ===")
-    task2_customThreadFactory()
+    println("\n=== Task 2: Dangers ===")
+    task2_dangers()
 
-    println("\n=== Task 3: Custom Rejection Handler ===")
-    task3_customRejectionHandler()
+    println("\n=== Task 3: ThreadPoolExecutor Stages ===")
+    task3_threadPoolExecutor()
 
-    println("\n=== Task 4: Graceful Shutdown ===")
-    task4_gracefulShutdown()
+    println("\n=== Task 4: Rejection Policies ===")
+    task4_rejectionPolicies()
 
     println("\n=== Task 5: Invocation Strategies ===")
     task5_invocationStrategies()
+
+    println("\n=== Task 6: ThreadFactory + Shutdown ===")
+    task6_shutdownAndFactory()
 }

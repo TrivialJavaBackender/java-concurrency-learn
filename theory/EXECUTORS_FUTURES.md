@@ -2,6 +2,56 @@
 
 ---
 
+## 0. Виды thread pools — сравнение
+
+| Фабричный метод | core | max | Queue | keepAlive | Когда использовать |
+|---|---|---|---|---|---|
+| `newFixedThreadPool(n)` | n | n | LinkedBlockingQueue (∞) | — | Предсказуемая нагрузка, CPU-bound |
+| `newCachedThreadPool()` | 0 | MAX_INT | SynchronousQueue | 60s | Короткие burst-задачи, I/O-bound |
+| `newSingleThreadExecutor()` | 1 | 1 | LinkedBlockingQueue (∞) | — | Гарантированный порядок |
+| `newScheduledThreadPool(n)` | n | MAX_INT | DelayedWorkQueue | — | Периодические/отложенные задачи |
+| `newWorkStealingPool()` | — | — | work-stealing deque | — | Параллельные CPU-задачи, рекурсия |
+| `newVirtualThreadPerTaskExecutor()` | — | — | — | — | Java 21+, много I/O-bound задач |
+
+### Опасности
+
+**newFixedThreadPool** — очередь **неограничена** (`LinkedBlockingQueue`).
+При медленных consumer'ах очередь растёт → OOM.
+✅ Исправление: `ThreadPoolExecutor` с `ArrayBlockingQueue`.
+
+**newCachedThreadPool** — создаёт поток на каждую задачу.
+При 10 000 concurrent задач → 10 000 потоков → OOM / thrashing.
+✅ Исправление: ограничить через `Semaphore` или заменить на FixedThreadPool.
+
+**newSingleThreadExecutor** — тоже с unbounded queue.
+Если задача бросит `Error`, поток пересоздаётся, но задача теряется.
+
+**newWorkStealingPool** — порядок LIFO, не FIFO. Блокирующие задачи голодят пул.
+
+### Алгоритм принятия задачи (ThreadPoolExecutor)
+
+```
+submit(task)
+  ├─ workers < corePoolSize?    → создать core-поток, выполнить
+  ├─ queue.offer(task)?         → положить в очередь
+  ├─ workers < maxPoolSize?     → создать non-core поток, выполнить
+  └─ RejectionHandler!
+```
+
+### Шпаргалка выбора пула
+
+```
+CPU-bound, фиксированный параллелизм → newFixedThreadPool(nCPU)
+Короткие burst I/O задачи           → newCachedThreadPool() + Semaphore
+Периодические задачи (cron-like)    → newScheduledThreadPool(n)
+Рекурсивное разбиение / D&C         → ForkJoinPool / newWorkStealingPool
+I/O-bound, Java 21+                 → newVirtualThreadPerTaskExecutor()
+Гарантия порядка                    → newSingleThreadExecutor()
+Нужен back-pressure                 → ThreadPoolExecutor + ArrayBlockingQueue + CallerRunsPolicy
+```
+
+---
+
 ## 1. Executor Framework — архитектура
 
 ```

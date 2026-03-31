@@ -18,7 +18,11 @@
 6. Обнови PROGRESS.md
 
 ### Следующий модуль
-Когда пользователь говорит "следующий" или "next" — найди первый незавершённый модуль в PROGRESS.md, покажи теорию из ROADMAP.md и предложи начать упражнения.
+Когда пользователь говорит "следующий" или "next":
+1. Найди первый незавершённый модуль в PROGRESS.md
+2. Прочитай соответствующий файл теории из theory/ (см. таблицу в ROADMAP.md)
+3. Покажи краткое содержание теории и ключевые вопросы для самопроверки
+4. Предложи начать с первого невыполненного упражнения модуля
 
 ### Квиз
 Когда пользователь говорит "квиз" или "quiz" — задай 5 случайных вопросов из INTERVIEW_QUESTIONS.md, жди ответа, оцени.
@@ -26,3 +30,14 @@
 ## Сборка
 - `mvn compile` — компиляция
 - `mvn exec:java -Dexec.mainClass="exercises.Ex01_ThreadBasicsKt"` — запуск упражнения
+
+## Структура теории
+Теория хранится в папке `theory/`, по одному файлу на модуль:
+- theory/THREADS_BASICS.md — Модуль 1
+- theory/LOCKS.md — Модуль 2
+- theory/ATOMIC_CAS.md — Модуль 3
+- theory/CONCURRENT_COLLECTIONS.md — Модуль 4
+- theory/EXECUTORS_FUTURES.md — Модуль 5
+- theory/SYNCHRONIZERS.md — Модуль 6
+- theory/PROBLEMS.md — Модуль 7
+- theory/VIRTUAL_THREADS.md — Модуль 8
