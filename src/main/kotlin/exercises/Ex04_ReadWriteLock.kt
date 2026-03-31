@@ -54,12 +54,6 @@ class MetricsStore {
 
     fun getOrInit(name: String, initializer: () -> Long): Long {
         // TODO: реализуй lock downgrade
-        // 1. read lock → проверь
-        // 2. если нет: release read, acquire write, double-check, вычисли, запиши
-        // 3. пока держишь write lock — возьми read lock
-        // 4. release write lock
-        // 5. используй значение под read lock, release read lock
-        // Зачем п.3-4? Чтобы никакой writer не успел изменить значение между release(write) и acquire(read)
         throw NotImplementedError()
     }
 }
@@ -85,8 +79,7 @@ fun main() {
     // Читатель БЕЗ snapshot — может поймать частичное состояние
     val reader = Thread {
         repeat(10_000) {
-            // TODO: прочитай cpu, mem, rps по отдельности через get()
-            // Проверь что все три равны (если нет — inconsistencies++)
+            // TODO: читай метрики и проверяй консистентность
         }
     }
 
@@ -103,8 +96,7 @@ fun main() {
     // === Задание 3: Benchmark ===
     println("\n=== Benchmark: ReadWriteLock vs synchronized ===")
     // TODO: Запусти 10 reader-потоков + 1 writer на 3 секунды
-    // Считай количество read-операций для RWLock и для synchronized версии
-    // Напечатай throughput каждого
+    // Сравни throughput ReadWriteLock и synchronized версии
 
     // === Задание 4: Lock downgrade ===
     println("\n=== Lock Downgrade ===")

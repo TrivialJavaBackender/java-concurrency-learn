@@ -34,11 +34,9 @@ class LockFreeStack<T> {
             oldHead = top.get()
             newHead = Node(value, oldHead)
         } while (!top.compareAndSet(oldHead, newHead))
-        // TODO: Реализуй через CAS-цикл (без synchronized)
     }
 
     fun pop(): T? {
-        // TODO: Реализуй через CAS-цикл (без synchronized)
         var newHead: Node<T>?
         var oldHead: Node<T>?
 
@@ -60,7 +58,6 @@ class CASCounter {
         do {
             val oldValue = value.get()
         } while (!value.compareAndSet(oldValue, oldValue + 1))
-        // TODO: Реализуй через цикл с compareAndSet (не используй incrementAndGet)
     }
 
     fun get(): Int = value.get()
@@ -72,7 +69,6 @@ fun benchmarkAtomicVsAdder() {
     val threads = 10
     val iterations = 1_000_000
 
-    // TODO: Замерь и сравни время AtomicLong и LongAdder при конкурентных инкрементах
     // Подумай: почему LongAdder быстрее при высокой конкуренции?
 
     val atomicLong = AtomicLong(0L)

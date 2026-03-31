@@ -111,14 +111,14 @@ class SimpleEventBus {
 }
 
 fun main() {
-    println("=== Задание 2: check-then-put vs putIfAbsent ===\n")
-    raceDemo()
-
     println("\n=== Задание 1: Word Count ===\n")
     val text = "the quick brown fox jumps over the lazy dog the fox the dog"
     val counts = parallelWordCount(text).toSortedMap()
     println("Word counts: $counts")
     println("Expected:    {the=4, fox=2, dog=2, quick=1, brown=1, jumps=1, over=1, lazy=1}")
+
+    println("=== Задание 2: check-then-put vs putIfAbsent ===\n")
+    raceDemo()
 
     println("\n=== Задание 3: Event Bus — concurrent demo ===\n")
     val bus = SimpleEventBus()

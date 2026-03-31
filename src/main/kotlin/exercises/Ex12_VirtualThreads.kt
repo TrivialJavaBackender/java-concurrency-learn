@@ -24,24 +24,22 @@ import kotlin.concurrent.withLock
  */
 
 fun task1_massiveVirtualThreads() {
-    // TODO: Создай 100_000 виртуальных потоков через Thread.ofVirtual().start { }
-    // Дождись всех. Замерь время. Объясни результат.
+    // TODO: Создай 100_000 виртуальных потоков, каждый спит 1000ms
+    // Дождись всех. Замерь время. Объясни почему это работает, а platform threads — нет.
     println("TODO")
 }
 
 fun task2_virtualThreadServer() {
-    // TODO: Используй Executors.newVirtualThreadPerTaskExecutor()
-    // Submit 1000 "запросов" (каждый sleep 100ms, возвращает "response for $req")
+    // TODO: Обработай 1000 "запросов" конкурентно в виртуальных потоках
+    // Каждый запрос: sleep 100ms, вернуть результат
     // Собери все результаты, напечатай количество обработанных
     println("TODO")
 }
 
 fun task3_pinningProblem() {
-    // TODO: Запусти 100 виртуальных потоков с synchronized(lock) { Thread.sleep(100) }
-    // Замерь время — будет медленно (pinning!)
-    //
-    // Затем повтори с ReentrantLock — будет быстро
-    // Объясни: почему synchronized пиннит виртуальный поток к carrier thread?
+    // TODO: Запусти 100 виртуальных потоков с блокирующим sleep внутри synchronized блока
+    // Замерь время, затем повтори с другим механизмом синхронизации
+    // Объясни разницу в поведении
     println("TODO")
 }
 

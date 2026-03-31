@@ -26,13 +26,12 @@ fun main() {
     val queue1 = ArrayBlockingQueue<Int>(10)  // bounded — generator блокируется если переполнена
     val queue2 = LinkedBlockingQueue<Int>()    // unbounded
 
-    // TODO: Generator thread — put 1..100 в queue1, затем 3 poison pills
+    // TODO: Generator thread — генерирует числа 1..100, затем сигнализирует о завершении
 
-    // TODO: 3 Transformer threads — take из queue1, если poison pill -> передай в queue2 и завершись
-    //       иначе положи number*number в queue2
+    // TODO: 3 Transformer threads — берут числа из queue1, возводят в квадрат, кладут в queue2
+    //       корректно обрабатывают сигнал завершения и передают его дальше
 
-    // TODO: Aggregator thread — take из queue2, если poison pill -> уменьши счётчик transformer'ов
-    //       когда все 3 transformer'а завершились -> напечатай сумму
+    // TODO: Aggregator thread — суммирует результаты из queue2 до получения сигнала завершения
 
     // TODO: Дождись всех потоков
 

@@ -67,7 +67,7 @@ fun task1_parallelToList(): CompletableFuture<List<String>> {
 // ===== Задание 2: thenCombine =====
 
 fun task2_combine(userId: Int): CompletableFuture<String> {
-    // TODO: Запусти fetchUser и fetchAddress ПАРАЛЛЕЛЬНО, объедини через thenCombine
+    // TODO: Запусти fetchUser и fetchAddress ПАРАЛЛЕЛЬНО, объедини результаты в одну строку
     return CompletableFuture.completedFuture("")
 }
 
@@ -79,7 +79,7 @@ fun task3_errorHandling() {
 
     // TODO: exceptionally — протести на failing и succeeding
     // TODO: handle — протести на failing и succeeding
-    // TODO: whenComplete — покажи что исключение всё равно пробрасывается
+    // TODO: whenComplete — протести на failing и succeeding, подумай чем отличается от handle
 
     println("Error handling demo")
 }
@@ -88,8 +88,7 @@ fun task3_errorHandling() {
 
 fun task4_timeout() {
     // TODO: Создай медленный CF (sleep 5s)
-    // orTimeout(1s) + exceptionally → напечатай "Timeout: ..."
-    // completeOnTimeout("Default", 1s) → напечатай "Default value"
+    // Обработай таймаут двумя способами: с исключением и с дефолтным значением
 
     println("Timeout demo")
 }
@@ -101,15 +100,13 @@ fun <T> retryWithBackoff(
     maxRetries: Int,
     initialDelayMs: Long = 100
 ): CompletableFuture<T> {
-    // TODO: При ошибке — подождать initialDelayMs и повторить с maxRetries-1 и задержкой*2
+    // TODO: При ошибке — подождать initialDelayMs и повторить, удваивая задержку
     // При maxRetries=0 — вернуть failed future
-    // Используй exceptionallyCompose (Java 12+) или вложенные thenCompose
     return action()
 }
 
 fun task5_retry() {
-    // TODO: val result = retryWithBackoff({ MockApi.unreliableService() }, maxRetries = 5)
-    // println("Result: ${result.join()}")
+    // TODO: вызови retryWithBackoff с MockApi.unreliableService(), maxRetries = 5
     println("Retry demo")
 }
 
@@ -117,7 +114,7 @@ fun task5_retry() {
 
 fun task6_race() {
     // TODO: Два CF с разной задержкой (random 100-1000ms каждый)
-    // applyToEither — победитель применяет функцию к результату
+    // Верни результат того, кто завершится первым, применив к нему функцию
     // Напечатай кто выиграл
 
     println("Race demo")

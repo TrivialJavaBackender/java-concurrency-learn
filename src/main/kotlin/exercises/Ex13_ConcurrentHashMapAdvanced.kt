@@ -34,8 +34,8 @@ class LazyCache<K, V>(private val loader: (K) -> V) {
     val computeCount = AtomicInteger(0)
 
     fun get(key: K): V {
-        // TODO: Используй computeIfAbsent
-        // Внутри loader — инкрементируй computeCount
+        // TODO: загружай значение ровно один раз при конкурентном доступе
+        // отслеживай количество вызовов loader через computeCount
         return loader(key) // placeholder
     }
 }
@@ -70,8 +70,8 @@ fun task2_frequencyCounter() {
     )
     val frequency = ConcurrentHashMap<String, Int>()
 
-    // TODO: Для каждого массива логов запусти отдельный поток
-    // Используй merge() для накопления счётчиков без synchronized
+    // TODO: Запусти 3 потока параллельно (по одному на каждый массив логов)
+    // Атомарно накапливай счётчики без synchronized
     // Дождись всех потоков, напечатай результат
 
     println("Frequency: $frequency")
@@ -85,9 +85,9 @@ fun task3_bulkOperations() {
         stats["page-$i"] = (Math.random() * 2000).toLong()
     }
 
-    // TODO: forEach с parallelismThreshold = 100 — напечатай страницы с > 1500 просмотров
-    // TODO: reduceValuesToLong — суммарное количество просмотров
-    // TODO: search — первая страница с > 1900 просмотрами
+    // TODO: напечатай все страницы с > 1500 просмотров (bulk операция)
+    // TODO: найди суммарное количество просмотров (bulk reduce)
+    // TODO: найди первую страницу с > 1900 просмотрами (bulk search)
 }
 
 // ===== Задание 4: compute vs merge =====
@@ -106,8 +106,8 @@ fun task4_computeVsMerge() {
         else newVal
     }
 
-    // TODO: Реализуй "expiring counter" через compute():
-    // Инкрементируй "counter", при превышении 5 — удаляй (возвращай null из лямбды)
+    // TODO: Реализуй "expiring counter":
+    // Инкрементируй "counter", при превышении 5 — удаляй запись (сброс)
     // 10 потоков по 3 инкремента — что получится?
 
     println("compute vs merge demo done, visits=${map["visits"]}")

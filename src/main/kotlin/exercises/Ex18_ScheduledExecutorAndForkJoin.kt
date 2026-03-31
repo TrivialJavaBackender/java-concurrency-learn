@@ -36,12 +36,12 @@ fun task1_rateVsDelay() {
     val startTime = System.currentTimeMillis()
     fun elapsed() = System.currentTimeMillis() - startTime
 
-    // TODO: scheduleAtFixedRate — запуск каждые 500ms (фиксированная точка по часам)
-    // Каждая итерация: логируй elapsed(), затем sleep рандомное 100-600ms
+    // TODO: scheduleAtFixedRate — запуск каждые 500ms
+    // Логируй время запуска, внутри sleep рандомное 100-600ms
     // Что происходит если sleep > 500ms?
 
-    // TODO: scheduleWithFixedDelay — 500ms ПОСЛЕ завершения предыдущей
-    // Та же логика, другое поведение
+    // TODO: scheduleWithFixedDelay — 500ms задержка после завершения предыдущей итерации
+    // Та же задача, другое поведение — чем отличается?
 
     // Запусти 5 секунд, cancel оба, shutdown
 
@@ -56,7 +56,6 @@ class SimpleRateLimiter(permitsPerSecond: Int) {
 
     init {
         // TODO: Каждую секунду пополняй semaphore до permitsPerSecond
-        // Подсказка: сколько нужно release()? (permitsPerSecond - semaphore.availablePermits())
     }
 
     fun acquire() {
@@ -70,7 +69,7 @@ class SimpleRateLimiter(permitsPerSecond: Int) {
 
 fun task2_rateLimiter() {
     // TODO: Создай rate limiter на 5 ops/sec
-    // 20 задач — каждая acquire() + логируй время + "работает"
+    // 20 задач логируют время выполнения
     // Убедись что в каждую секунду выполняется не больше 5 задач
 
     println("Rate limiter demo")
@@ -90,9 +89,8 @@ class ParallelSearch(
     }
 
     override fun compute(): Int {
-        // TODO: При hi-lo <= THRESHOLD — линейный поиск в диапазоне, вернуть индекс или -1
-        // Иначе: fork левую половину, compute правую, join левую
-        // Вернуть первый найденный (не -1)
+        // TODO: При hi-lo <= THRESHOLD — линейный поиск в диапазоне
+        // Иначе — разбей и объедини результаты (вернуть найденный индекс, или -1)
         return -1
     }
 }
@@ -121,8 +119,8 @@ class AverageTask(
     }
 
     override fun compute(): Pair<Double, Int> {
-        // TODO: При hi-lo <= THRESHOLD — суммируй линейно, верни Pair(sum, count)
-        // Иначе: fork/compute/join, объедини пары через сложение
+        // TODO: При hi-lo <= THRESHOLD — суммируй линейно
+        // Иначе — разбей и объедини результаты рекурсивно
         return Pair(0.0, 0)
     }
 }
@@ -140,11 +138,9 @@ fun task4_mapReduceAverage() {
 // ===== Задание 5: commonPool blocking problem =====
 
 fun task5_commonPoolProblem() {
-    // TODO: Узнай parallelism у ForkJoinPool.commonPool()
-    // Запусти parallelism*2 задач через CompletableFuture.supplyAsync (использует commonPool)
-    // Каждая задача: Thread.sleep(2000)
-    // Замерь общее время — почему оно ~4s а не ~2s?
-    // Исправь: создай собственный Executors.newFixedThreadPool(20) и передай его в supplyAsync
+    // TODO: Запусти parallelism*2 блокирующих задач через commonPool
+    // Замерь время — почему оно больше ожидаемого?
+    // Исправь с помощью собственного executor'а и сравни
 
     println("commonPool blocking demo")
 }

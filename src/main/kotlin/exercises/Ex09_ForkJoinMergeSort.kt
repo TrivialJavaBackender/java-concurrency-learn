@@ -30,8 +30,8 @@ class MergeSortTask(
 
     override fun compute(): IntArray {
         // TODO: Реализуй рекурсивный merge sort через fork/join
-        // При right - left <= THRESHOLD — сортируй напрямую (copyOfRange + sort)
-        // Иначе — fork левую половину, compute правую, join левую, merge результаты
+        // При right - left <= THRESHOLD — сортируй напрямую
+        // Иначе — разбей на 2 половины, объедини результаты через merge()
         return array.copyOfRange(left, right).also { it.sort() } // placeholder
     }
 
@@ -61,7 +61,7 @@ class MaxFinderTask(
     override fun compute(): Int {
         // TODO: Реализуй параллельный поиск максимума через fork/join
         // При right - left <= THRESHOLD — линейный поиск в диапазоне
-        // Иначе — fork/compute/join, вернуть max(leftMax, rightMax)
+        // Иначе — разбей и объедини результаты
         return array.copyOfRange(left, right).max()
     }
 }

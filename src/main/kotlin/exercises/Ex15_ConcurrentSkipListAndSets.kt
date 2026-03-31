@@ -31,20 +31,16 @@ class Leaderboard {
     private val playerScores = ConcurrentHashMap<String, Int>()
 
     fun updateScore(player: String, score: Int) {
-        // TODO: Обнови счёт игрока атомарно:
-        // 1. Сохрани новый счёт в playerScores
-        // 2. Удали старый score из scores (если был)
-        // 3. Вставь новый
+        // TODO: Обнови счёт игрока атомарно
     }
 
     fun topN(n: Int): List<Pair<String, Int>> {
         // TODO: Верни N лучших (наибольший score первым)
-        // Используй descendingMap()
         return emptyList()
     }
 
     fun playersAboveScore(minScore: Int): Map<Int, String> {
-        // TODO: Используй tailMap(minScore) для range query
+        // TODO: Верни игроков с score >= minScore
         return emptyMap()
     }
 }
@@ -72,7 +68,7 @@ fun task2_sortedEvents() {
 
     // TODO: 3 потока, каждый добавляет 10 событий с текущим timestamp
     // Дождись всех потоков
-    // Запроси события за последние 100ms через tailSet()
+    // Запроси события за последние 100ms
     // Напечатай количество недавних событий
 
     println("Sorted events demo")

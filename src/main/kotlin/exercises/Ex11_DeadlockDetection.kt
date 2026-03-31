@@ -25,7 +25,7 @@ fun task1_createDeadlock() {
         synchronized(lock1) {
             println("Thread1: holds lock1")
             Thread.sleep(100)
-            // TODO: synchronized(lock2) { println("Thread1: holds both locks") }
+            // TODO: захвати lock2
         }
     }, "Thread-1")
 
@@ -33,7 +33,7 @@ fun task1_createDeadlock() {
         synchronized(lock2) {
             println("Thread2: holds lock2")
             Thread.sleep(100)
-            // TODO: synchronized(lock1) { println("Thread2: holds both locks") }
+            // TODO: захвати lock1
         }
     }, "Thread-2")
 
@@ -66,8 +66,8 @@ fun task2a_fixWithLockOrdering() {
 }
 
 fun task2b_fixWithTryLock() {
-    // TODO: Используй ReentrantLock + tryLock(1, TimeUnit.SECONDS)
-    // Если не удалось захватить — отпусти все блокировки и попробуй снова
+    // TODO: Используй tryLock с таймаутом вместо blocking lock
+    // При неудаче — отступи и повтори попытку
 }
 
 // ===== Задание 3: 3-thread circular deadlock =====

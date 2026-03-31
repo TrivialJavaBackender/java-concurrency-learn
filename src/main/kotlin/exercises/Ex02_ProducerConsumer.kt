@@ -20,22 +20,18 @@ class BoundedBuffer(private val capacity: Int) {
 
     @Synchronized
     fun put(value: Int) {
-        // TODO: Пока buffer.size >= capacity — wait()
-        // Добавь значение в buffer
-        // notifyAll()
+        // TODO
     }
 
     @Synchronized
     fun take(): Int? {
-        // TODO: Пока buffer.isEmpty() и !finished — wait()
-        // Если buffer.isEmpty() и finished — верни null (сигнал завершения)
-        // Иначе удали первый элемент, notifyAll(), верни его
+        // TODO
         return null
     }
 
     @Synchronized
     fun markFinished() {
-        // TODO: finished = true; notifyAll()
+        // TODO
     }
 }
 
@@ -45,10 +41,9 @@ fun main() {
     val consumerCount = 2
 
     // TODO: Запусти 3 producer'а (каждый кладёт числа 1..20)
-    // TODO: Запусти 2 consumer'а (каждый берёт числа пока take() != null, суммирует)
-    // TODO: Дождись завершения producer'ов, затем buffer.markFinished()
-    // TODO: Дождись завершения consumer'ов
-    // TODO: Напечатай общую сумму (должна быть 630)
+    // TODO: Запусти 2 consumer'а (каждый суммирует числа до сигнала завершения)
+    // TODO: После завершения producer'ов — сигнализируй о конце
+    // TODO: Дождись всех потоков и напечатай общую сумму (должна быть 630)
 
     println("Expected sum: 630")
 }

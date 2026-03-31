@@ -77,13 +77,9 @@ fun task1_allPoolTypes() {
         executor.shutdown()
     }
 
-    // TODO: Запусти runTasks для каждого типа пула:
-    // Executors.newFixedThreadPool(4)
-    // Executors.newCachedThreadPool()
-    // Executors.newSingleThreadExecutor()
-    // Executors.newWorkStealingPool()
-
-    // Для SingleThread дополнительно: убедись что задачи выполняются строго по порядку submit
+    // TODO: Запусти runTasks для каждого из 4 стандартных типов ExecutorService
+    // Сравни время выполнения и количество используемых потоков
+    // Для SingleThread: проверь порядок выполнения задач
     // Для WorkStealing: объясни почему порядок не гарантирован
 }
 
@@ -92,18 +88,18 @@ fun task1_allPoolTypes() {
 fun task2_dangers() {
     println("--- 2a: CachedPool thread explosion ---")
     // TODO: Создай newCachedThreadPool(), submit 200 задач по 5 секунд каждая
-    // Через каждую секунду печатай Thread.activeCount()
+    // Мониторь количество активных потоков каждую секунду
     // Остановись через 3 секунды (не жди завершения)
     // Что происходит с количеством потоков? Почему это опасно в production?
 
     println("--- 2b: FixedPool queue growth ---")
-    // TODO: Создай newFixedThreadPool(2) как ThreadPoolExecutor (чтобы получить доступ к getQueue())
-    // Submit 100 задач по 1 секунде, каждые 100ms печатай queue.size
+    // TODO: Создай newFixedThreadPool(2), submit 100 задач по 1 секунде
+    // Мониторь размер внутренней очереди каждые 100ms
     // Остановись через 2 секунды
     // Что случится с памятью если задач будут миллионы?
 
     println("--- 2c: Fix с ограниченной очередью ---")
-    // TODO: Создай ThreadPoolExecutor(2, 4, 60s, ArrayBlockingQueue(10), CallerRunsPolicy)
+    // TODO: Создай пул с ограниченной очередью и политикой отклонения
     // Submit те же 100 задач — что изменилось?
 }
 
@@ -111,8 +107,7 @@ fun task2_dangers() {
 
 fun task3_threadPoolExecutor() {
     // TODO: Создай ThreadPoolExecutor(core=2, max=6, keepAlive=30s, queue=ArrayBlockingQueue(10))
-    // Submit 20 задач (sleep 2000ms каждая), для каждой логируй:
-    //   "[Task-N] submitted | pool=${executor.poolSize} | queue=${executor.queue.size} | active=${executor.activeCount}"
+    // Submit 20 задач (sleep 2000ms каждая) и логируй состояние пула после каждого submit
     // Должны быть видны все 4 стадии: core → queue → max → rejection
 
     println("ThreadPoolExecutor stages demo")
@@ -167,8 +162,7 @@ class NamedThreadFactory(private val prefix: String) : ThreadFactory {
     private val counter = AtomicInteger(0)
 
     override fun newThread(r: Runnable): Thread {
-        // TODO: имя "$prefix-worker-N", daemon=false
-        // uncaughtExceptionHandler: логирует "[prefix-worker-N] uncaught: message"
+        // TODO: задай имя потоку, daemon=false, настрой обработчик непойманных исключений
         return Thread(r) // placeholder
     }
 }
@@ -176,8 +170,7 @@ class NamedThreadFactory(private val prefix: String) : ThreadFactory {
 fun task6_shutdownAndFactory() {
     // TODO: Создай FixedThreadPool(3) с NamedThreadFactory("my-pool")
     // Submit 10 задач (sleep 1000ms каждая)
-    // Через 2 секунды начни graceful shutdown:
-    //   shutdown() → awaitTermination(3s) → если timeout: val notStarted = shutdownNow()
+    // Через 2 секунды начни graceful shutdown
     // Напечатай сколько задач не успело запуститься
 
     println("Graceful shutdown demo")

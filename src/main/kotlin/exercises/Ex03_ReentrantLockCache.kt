@@ -53,8 +53,8 @@ class ConcurrentLRUCache<K, V>(private val maxSize: Int) {
     }
 
     fun getOrCompute(key: K, loader: (K) -> V): V {
-        // TODO: верни из кэша если есть; иначе вычисли через loader и положи
-        // loader НЕ должен вызываться под локом
+        // TODO: верни из кэша если есть; иначе вычисли и положи
+        // Подумай: можно ли вызывать loader под локом?
         throw NotImplementedError()
     }
 
