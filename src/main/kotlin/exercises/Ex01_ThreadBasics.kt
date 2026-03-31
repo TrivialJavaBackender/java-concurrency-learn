@@ -48,12 +48,11 @@ class PingPong {
     private var isPing = true
 
     fun ping() {
-        // TODO: В цикле 10 раз:
-        //   synchronized(lock) { while (!isPing) lock.wait(); print "ping"; isPing=false; lock.notifyAll() }
+        // TODO: 10 раз: дождись своей очереди (isPing == true), напечатай "ping", передай ход
     }
 
     fun pong() {
-        // TODO: Аналогично, но ждёт isPing == false, печатает "pong"
+        // TODO: 10 раз: дождись своей очереди (isPing == false), напечатай "pong", передай ход
     }
 }
 
