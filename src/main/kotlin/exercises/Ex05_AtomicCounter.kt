@@ -1,8 +1,10 @@
 package exercises
 
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.atomic.LongAdder
+import kotlin.time.measureTime
 
 /**
  * УПРАЖНЕНИЕ 5: Atomic операции и CAS
@@ -26,12 +28,26 @@ class LockFreeStack<T> {
     private val top = AtomicReference<Node<T>?>(null)
 
     fun push(value: T) {
+        var newHead: Node<T>?
+        var oldHead: Node<T>?
+        do {
+            oldHead = top.get()
+            newHead = Node(value, oldHead)
+        } while (!top.compareAndSet(oldHead, newHead))
         // TODO: Реализуй через CAS-цикл (без synchronized)
     }
 
     fun pop(): T? {
         // TODO: Реализуй через CAS-цикл (без synchronized)
-        return null
+        var newHead: Node<T>?
+        var oldHead: Node<T>?
+
+        do {
+            oldHead = top.get()
+            if (oldHead == null) return null
+            newHead = oldHead.next
+        } while (!top.compareAndSet(oldHead, newHead))
+        return oldHead.value
     }
 }
 
@@ -41,6 +57,9 @@ class CASCounter {
     private val value = AtomicInteger(0)
 
     fun increment() {
+        do {
+            val oldValue = value.get()
+        } while (!value.compareAndSet(oldValue, oldValue + 1))
         // TODO: Реализуй через цикл с compareAndSet (не используй incrementAndGet)
     }
 
@@ -51,11 +70,32 @@ class CASCounter {
 
 fun benchmarkAtomicVsAdder() {
     val threads = 10
-    val iterations = 1_000_000L
+    val iterations = 1_000_000
 
     // TODO: Замерь и сравни время AtomicLong и LongAdder при конкурентных инкрементах
     // Подумай: почему LongAdder быстрее при высокой конкуренции?
-    println("TODO: implement benchmark")
+
+    val atomicLong = AtomicLong(0L)
+    val longAdder = LongAdder()
+
+    val atomicLongTime = measureTime {
+        val atomicLongThread = (1..threads).map {
+            Thread { repeat(iterations) { atomicLong.incrementAndGet() } }
+        }
+        atomicLongThread.forEach { it.start() }
+        atomicLongThread.forEach { it.join() }
+    }
+
+    val longAdderTime = measureTime {
+        val longAdderThreads = (1..threads).map {
+            Thread { repeat(iterations) { longAdder.increment() } }
+        }
+        longAdderThreads.forEach { it.start() }
+        longAdderThreads.forEach { it.join() }
+    }
+
+    println("AtomicLong Time ${atomicLongTime}ms")
+    println("LongAdder Time ${longAdderTime}ms")
 }
 
 fun main() {
