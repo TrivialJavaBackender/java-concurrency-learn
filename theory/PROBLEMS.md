@@ -169,7 +169,15 @@ counter.incrementAndGet();
 |---|---|---|
 | Определение | Нет HB для concurrent доступа | Неверный результат из-за порядка |
 | Требует | Concurrent read+write без sync | Логически некорректная синхронизация |
-| Может быть без другого | Нет (data race → race condition) | Да (race condition без data race) |
+| Может быть без другого | Теоретически да (benign data race), но по JMM — всегда UB | Да (race condition без data race) |
+
+> **Benign data race** — data race, который "случайно работает" на конкретной JVM/CPU (например, идемпотентная запись одного и того же значения). Формально это всё равно UB по JMM и полагаться на него нельзя. На практике для собеседований: "data race всегда проблема".
+
+**Race condition без data race** — пример: два потока атомарно читают и записывают в `AtomicReference`, но вместе делают check-then-act:
+```java
+if (ref.get() == null)       // атомарно, но...
+    ref.set(new Value());    // между ними вклинился другой поток!
+```
 
 ---
 
@@ -255,9 +263,13 @@ long[] counters = new long[2];
 // Поток 1 пишет counters[0], Поток 2 пишет counters[1] — замедление!
 
 // ✅ Padding (@Contended — Java 8+)
-@sun.misc.Contended
+@sun.misc.Contended  // доступен через модуль jdk.unsupported (Java 9+)
 class Counter { volatile long value; }
 // JVM добавляет padding вокруг поля до 128 байт
+
+// ⚠️ Для пользовательского кода нужен JVM-флаг:
+// -XX:-RestrictContended
+// Без флага аннотация применяется только к классам самой JDK!
 ```
 
 ### Thread Confinement

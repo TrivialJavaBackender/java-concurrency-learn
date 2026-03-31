@@ -104,7 +104,7 @@ try {
 // ❌ Дорого при большом количестве VT
 ThreadLocal<UserContext> ctx = new ThreadLocal<>();
 
-// ✅ ScopedValue (Java 21+, preview → finalized в 24)
+// ✅ ScopedValue (Java 21–23 preview → финализировано в Java 24, JEP 487)
 ScopedValue<UserContext> USER_CTX = ScopedValue.newInstance();
 
 ScopedValue.where(USER_CTX, new UserContext("admin"))
@@ -127,14 +127,17 @@ ScopedValue.where(USER_CTX, new UserContext("admin"))
 
 ---
 
-## 5. Structured Concurrency (Java 21+, preview)
+## 5. Structured Concurrency (Java 24, финализировано)
 
 Дочерние потоки живут строго внутри блока родителя — нет утечек.
 
+**История:** incubator в Java 19–20, preview в Java 21–23, **финализировано в Java 24 (JEP 499)**.
+
 ```java
+// Java 22+ / финальный API (Java 24):
 try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-    Supplier<String> user    = scope.fork(() -> fetchUser(id));
-    Supplier<String> address = scope.fork(() -> fetchAddress(id));
+    StructuredTaskScope.Subtask<String> user    = scope.fork(() -> fetchUser(id));
+    StructuredTaskScope.Subtask<String> address = scope.fork(() -> fetchAddress(id));
 
     scope.join();           // ждём оба
     scope.throwIfFailed();  // пробрасываем ошибки
@@ -143,6 +146,8 @@ try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
 }
 // Выход из try-with-resources: все дочерние задачи гарантированно завершены
 ```
+
+> **Важно:** В Java 21 (preview) `fork()` возвращал `Supplier<T>`. С Java 22 тип изменился на `StructuredTaskScope.Subtask<T>`. Код выше — актуальный финальный API.
 
 **Политики:**
 - `ShutdownOnFailure` — если любой fork упал → отменить остальные
