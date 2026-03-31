@@ -97,8 +97,10 @@ map.compute(word, (k, v) -> v == null ? 1 : v + 1);
 // Thread-safe lazy cache
 Map<String, Connection> pool = new ConcurrentHashMap<>();
 Connection conn = pool.computeIfAbsent(url, this::createConnection);
-// Гарантия: createConnection вызовется ровно 1 раз для данного url
+// Гарантия (Java 9+): createConnection вызовется ровно 1 раз для данного url
+// В Java 8 был баг (JDK-8221462): при гонке функция могла вызваться дважды — исправлено в 9.
 // НО: не используй для долгих вычислений — bucket заблокирован!
+// ❌ Нельзя рекурсивно вызывать computeIfAbsent на той же карте — deadlock!
 ```
 
 > **Источник:** JCP §5.2.1, OpenJDK source `ConcurrentHashMap.java`

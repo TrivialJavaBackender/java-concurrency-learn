@@ -26,7 +26,7 @@
 **newSingleThreadExecutor** — тоже с unbounded queue.
 Если задача бросит `Error`, поток пересоздаётся, но задача теряется.
 
-**newWorkStealingPool** — порядок LIFO, не FIFO. Блокирующие задачи голодят пул.
+**newWorkStealingPool** — каждый поток выполняет свои задачи LIFO, но крадёт у других FIFO. Нет гарантии порядка. Блокирующие задачи голодят пул (carrier threads заняты).
 
 ### Алгоритм принятия задачи (ThreadPoolExecutor)
 
