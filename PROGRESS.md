@@ -21,7 +21,7 @@
 | 02 | ProducerConsumer | Bounded buffer, wait/notify | ⬜ |
 | 03 | ReentrantLockCache | ReentrantLock, Condition, getOrCompute | ⬜ |
 | 04 | ReadWriteLock | MetricsStore, lock downgrade, benchmark | ⬜ |
-| 05 | AtomicCounter | CAS, Treiber Stack, LongAdder | ⬜ |
+| 05 | AtomicCounter | CAS, Treiber Stack, LongAdder | ✅ |
 | 06 | ConcurrentMapWordCount | CHM merge, COWAL event bus | ⬜ |
 | 07 | BlockingQueuePipeline | ABQ, LBQ, pipeline, poison pill | ⬜ |
 | 08 | CompletableFutureChain | CF цепочки, allOf, anyOf | ⬜ |
