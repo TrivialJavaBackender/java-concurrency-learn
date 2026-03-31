@@ -41,7 +41,7 @@ class CASCounter {
     private val value = AtomicInteger(0)
 
     fun increment() {
-        // TODO: Реализуй через цикл с compareAndSet (не используй incrementAndGet)
+        // TODO: Реализуй без использования incrementAndGet
     }
 
     fun get(): Int = value.get()

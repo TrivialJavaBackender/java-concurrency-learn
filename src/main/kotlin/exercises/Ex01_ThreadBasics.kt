@@ -17,8 +17,7 @@ package exercises
 // ===== Задание 1 =====
 
 fun task1_parallelPrint() {
-    // TODO: Создай 5 потоков, каждый печатает "Thread-{name}: iteration {i}"
-    // Подсказка: Thread { ... }.also { it.name = "Worker-$n" }.start()
+    // TODO: Создай 5 потоков, каждый печатает своё имя и номер итерации 10 раз
 }
 
 // ===== Задание 2 =====
@@ -48,11 +47,11 @@ class PingPong {
     private var isPing = true
 
     fun ping() {
-        // TODO: 10 раз: дождись своей очереди (isPing == true), напечатай "ping", передай ход
+        // TODO
     }
 
     fun pong() {
-        // TODO: 10 раз: дождись своей очереди (isPing == false), напечатай "pong", передай ход
+        // TODO
     }
 }
 

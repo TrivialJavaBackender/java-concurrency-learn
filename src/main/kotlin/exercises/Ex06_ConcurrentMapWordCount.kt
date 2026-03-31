@@ -78,10 +78,8 @@ fun raceDemo() {
 // ===== Задание 3: Event Bus =====
 
 class SimpleEventBus {
-    val listeners = mutableListOf<(String) -> Unit>()
-
     fun subscribe(listener: (String) -> Unit) {
-        listeners.add(listener)
+        // TODO
     }
 
     fun unsubscribe(listener: (String) -> Unit) {
@@ -89,7 +87,7 @@ class SimpleEventBus {
     }
 
     fun publish(event: String) {
-        // TODO: Почему CopyOnWriteArrayList безопасен при конкурентной итерации?
+        // TODO
     }
 }
 

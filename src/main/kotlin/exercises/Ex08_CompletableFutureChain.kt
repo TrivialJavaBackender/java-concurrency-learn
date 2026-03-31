@@ -45,8 +45,7 @@ fun fetchOrders(profile: Map<String, String>): CompletableFuture<List<Double>> {
 
 fun task1_chain(username: String): CompletableFuture<Double> {
     // TODO: Построй цепочку из fetchUserId → fetchUserProfile → fetchOrders → sum
-    // Используй thenCompose для async шагов, thenApply для синхронного преобразования
-    // Обработай ошибки через exceptionally (вернуть 0.0)
+    // Обработай ошибки (вернуть 0.0 при ошибке)
     return CompletableFuture.completedFuture(0.0)
 }
 
@@ -54,7 +53,7 @@ fun task1_chain(username: String): CompletableFuture<Double> {
 
 fun task2_parallel(): CompletableFuture<Map<String, String>> {
     // TODO: Запусти 3 CompletableFuture параллельно (задержки 300ms, 200ms, 100ms)
-    // Используй allOf() чтобы дождаться всех, затем собери результаты через join()
+    // Дождись всех и собери результаты
     return CompletableFuture.completedFuture(emptyMap())
 }
 
@@ -62,8 +61,7 @@ fun task2_parallel(): CompletableFuture<Map<String, String>> {
 
 fun task3_race(): CompletableFuture<String> {
     // TODO: 3 "зеркала" с разной задержкой (100ms, 300ms, 500ms)
-    // Используй anyOf() — верни результат первого завершившегося
-    // Подумай: какой тип возвращает anyOf() и почему?
+    // Верни результат первого завершившегося
     return CompletableFuture.completedFuture("")
 }
 
