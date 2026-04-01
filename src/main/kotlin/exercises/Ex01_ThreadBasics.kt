@@ -17,7 +17,16 @@ package exercises
 // ===== Задание 1 =====
 
 fun task1_parallelPrint() {
-    // TODO: Создай 5 потоков, каждый печатает своё имя и номер итерации 10 раз
+    val threads = (1..5).map {
+        Thread {
+            repeat(10) {
+                println("Thread ${Thread.currentThread().name} - $it")
+            }
+        }
+    }.onEach { it.start() }
+
+    threads.forEach { it.join() }
+
 }
 
 // ===== Задание 2 =====
@@ -27,16 +36,25 @@ class SafeCounter {
         private set
 
     fun increment() {
-        // TODO: Сделай потокобезопасным с помощью synchronized
-        count++
+        synchronized(this) {
+            count++
+        }
     }
 }
 
 fun task2_safeIncrement(): Int {
     val counter = SafeCounter()
-    // TODO: Запусти 10 потоков, каждый вызывает counter.increment() 100_000 раз
-    // TODO: Дождись завершения всех потоков (join)
-    // TODO: Верни counter.count — должно быть 1_000_000
+
+    val threads = (1..10).map {
+        Thread {
+            repeat(100_000) {
+                counter.increment()
+            }
+        }
+    }.onEach { it.start() }
+
+    threads.forEach { it.join() }
+
     return counter.count
 }
 
@@ -47,17 +65,39 @@ class PingPong {
     private var isPing = true
 
     fun ping() {
-        // TODO
+        synchronized(lock) {
+            while (!isPing) {
+                lock.wait()
+            }
+            isPing = false
+            println("ping")
+            lock.notifyAll()
+        }
     }
 
     fun pong() {
-        // TODO
+        synchronized(lock) {
+            while (isPing) {
+                lock.wait()
+            }
+            isPing = true
+            println("pong")
+            lock.notifyAll()
+        }
     }
 }
 
 fun task3_pingPong() {
     val pp = PingPong()
-    // TODO: Запусти ping() и pong() в двух потоках
+
+    val t1 = Thread { repeat(10) { pp.ping() } }
+    val t2 = Thread { repeat(10) { pp.pong() } }
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
 }
 
 fun main() {

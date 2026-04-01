@@ -1,6 +1,14 @@
 package exercises
 
+import java.lang.Math.pow
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.FutureTask
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
+import kotlin.math.sqrt
 
 /**
  * УПРАЖНЕНИЕ 4: Хранилище метрик на ReadWriteLock
@@ -33,28 +41,77 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 class MetricsStore {
     private val lock = ReentrantReadWriteLock()
     private val metrics = mutableMapOf<String, Long>()
+    private val computedValues = ConcurrentHashMap<String, FutureTask<Long>>()
 
     fun record(name: String, value: Long) {
-        // TODO
+        lock.write {
+            metrics[name] = value
+        }
     }
 
     fun get(name: String): Long? {
-        // TODO
-        return null
+        lock.read {
+            return metrics[name]
+        }
+    }
+    fun getUnsafe(name: String): Long? {
+        return metrics[name]
+    }
+
+    @Synchronized
+    fun snapshotSync(): Map<String, Long> {
+            return HashMap(metrics)
+    }
+
+    @Synchronized
+    fun bulkUpdateSync(updates: Map<String, Long>) {
+        metrics.putAll(updates)
     }
 
     fun snapshot(): Map<String, Long> {
-        // TODO: верни копию под read lock
-        return emptyMap()
+        lock.read {
+            return HashMap(metrics)
+        }
+    }
+
+    fun snapshotUnsafe(): Map<String, Long> {
+        return HashMap(metrics)
     }
 
     fun bulkUpdate(updates: Map<String, Long>) {
-        // TODO: обнови все ключи атомарно под единым write lock
+        lock.write {
+            metrics.putAll(updates)
+        }
     }
 
     fun getOrInit(name: String, initializer: () -> Long): Long {
-        // TODO: реализуй lock downgrade
-        throw NotImplementedError()
+
+        val read = lock.read {
+            metrics[name]
+        }
+
+        if (read != null) return read
+        val task = computedValues.computeIfAbsent(name) { FutureTask { initializer() } }
+        task.run()
+
+        try {
+            lock.writeLock().lock()
+            val value = task.get()
+
+            if (!metrics.containsKey(name)) {
+                metrics[name] = value
+            }
+            lock.readLock().lock()
+        } finally {
+            lock.writeLock().unlock()
+            computedValues.remove(name)
+        }
+
+        try {
+            return metrics[name] ?: error("$name not found")
+        } finally {
+            lock.readLock().unlock()
+        }
     }
 }
 
@@ -65,37 +122,133 @@ fun main() {
     // === Задание 2: Consistency demo ===
     println("=== Consistency ===")
     var inconsistencies = 0
-    var finished = false
+    val finished = AtomicBoolean(false)
 
-    val writer = Thread {
+    var writer = Thread {
         var v = 0L
-        while (!finished) {
+        while (!finished.get()) {
             store.bulkUpdate(mapOf("cpu" to v, "mem" to v, "rps" to v))
             v++
-            Thread.sleep(1)
         }
     }
 
     // Читатель БЕЗ snapshot — может поймать частичное состояние
-    val reader = Thread {
+    var reader = Thread {
         repeat(10_000) {
-            // TODO: читай метрики и проверяй консистентность
+            val currentValue = store.getUnsafe("mem")
+            val equals = currentValue == store.getUnsafe("rps")
+                    && currentValue == store.getUnsafe("cpu")
+            if (!equals) {
+                inconsistencies++
+            }
         }
     }
 
     writer.start()
     reader.start()
     reader.join()
-    finished = true
+    finished.set(true)
     writer.join()
     println("Inconsistencies without snapshot: $inconsistencies")
 
     // Повтори reader используя snapshot() — inconsistencies должны быть 0
-    // TODO
+    inconsistencies = 0
+    finished.set(false)
+
+    writer = Thread {
+        var v = 0L
+        while (!finished.get()) {
+            store.bulkUpdate(mapOf("cpu" to v, "mem" to v, "rps" to v))
+            v++
+        }
+    }
+
+    reader = Thread {
+        repeat(10_000) {
+            val store = store.snapshot()
+            val currentValue = store["mem"]
+            val equals = currentValue == store["rps"]
+                    && currentValue == store["cpu"]
+            if (!equals) {
+                inconsistencies++
+            }
+        }
+    }
+
+    writer.start()
+    reader.start()
+    reader.join()
+    finished.set(true)
+    writer.join()
+    println("Inconsistencies with snapshot: $inconsistencies")
 
     // === Задание 3: Benchmark ===
     println("\n=== Benchmark: ReadWriteLock vs synchronized ===")
-    // TODO: Запусти 10 reader-потоков + 1 writer на 3 секунды
+
+    val isFinished = AtomicBoolean(false)
+    val syncReads = LongAdder()
+    val syncWrites = LongAdder()
+
+    val asyncReads = LongAdder()
+    val asyncWrites = LongAdder()
+
+    var readers = (1..10).map {
+        Thread {
+            while (!isFinished.get()) {
+                val store = store.snapshotSync()
+                store.forEach { string, num -> pow(sqrt(num.toDouble()), 24.0) }
+                syncReads.increment()
+            }
+        }
+    }.onEach { it.start() }
+
+    writer = Thread {
+        var v = 0L
+        while (!isFinished.get()) {
+            val map = (1..10000L).map { "value-$it" to v }.toMap()
+            store.bulkUpdateSync(map)
+            v++
+            syncWrites.increment()
+            Thread.sleep(1)
+        }
+    }.also { it.start() }
+
+    Thread.sleep(3000)
+    isFinished.set(true)
+    readers.forEach { it.join() }
+    writer.join()
+
+    println("Sync reads  : $syncReads. Sync Writes:  $syncWrites")
+
+    isFinished.set(false)
+    readers = (1..10).map {
+        Thread {
+            while (!isFinished.get()) {
+                val store = store.snapshot()
+                store.forEach { string, num -> pow(sqrt(num.toDouble()), 24.0) }
+                asyncReads.increment()
+            }
+        }
+    }.onEach { it.start() }
+
+    writer = Thread {
+        var v = 0L
+        while (!isFinished.get()) {
+            val map = (1..10000L).map { "value-$it" to v }.toMap()
+            store.bulkUpdate(map)
+            v++
+            asyncWrites.increment()
+            Thread.sleep(1)
+        }
+    }.also { it.start() }
+
+    Thread.sleep(3000)
+    isFinished.set(true)
+    readers.forEach { it.join() }
+    writer.join()
+
+    println("RWLock reads: $asyncReads. RWLock Writes: $asyncWrites")
+
     // Сравни throughput ReadWriteLock и synchronized версии
 
     // === Задание 4: Lock downgrade ===

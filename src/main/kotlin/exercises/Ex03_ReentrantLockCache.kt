@@ -1,8 +1,11 @@
 package exercises
 
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.FutureTask
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * УПРАЖНЕНИЕ 3: Thread-safe кэш на ReentrantLock + Condition
@@ -37,30 +40,76 @@ class ConcurrentLRUCache<K, V>(private val maxSize: Int) {
     private val lock = ReentrantLock()
     private val keyAdded = lock.newCondition()
     private val map = LinkedHashMap<K, V>(maxSize, 0.75f, true) // access-order LRU
+    private val futures = ConcurrentHashMap<K, FutureTask<V>>()
 
     fun get(key: K): V? {
-        // TODO
-        return null
+        lock.withLock {
+            return map[key]
+        }
     }
 
     fun put(key: K, value: V) {
-        // TODO: при заполненном кэше вытесни oldest элемент перед вставкой
+        lock.withLock {
+            if (map.containsKey(key)) {
+                map[key] = value
+            } else {
+                if (maxSize == map.size) {
+                    map.pollFirstEntry()
+                }
+                map[key] = value
+            }
+            keyAdded.signalAll()
+        }
     }
 
     fun waitForKey(key: K): V {
-        // TODO: блокируй до появления ключа
-        throw NotImplementedError()
+        lock.withLock {
+            while (!map.containsKey(key)) {
+                keyAdded.await()
+            }
+            return map[key] ?: error("$key not found in cache")
+        }
     }
 
     fun getOrCompute(key: K, loader: (K) -> V): V {
-        // TODO: верни из кэша если есть; иначе вычисли и положи
+        get(key)?.let { return it }
+
+        val task = futures.computeIfAbsent(key) {
+            FutureTask { loader(key) }
+        }
+        task.run()
+        val value = task.get()
+
+        lock.lock()
+        try {
+            if (map.containsKey(key)) {
+                return map[key] ?: error("$key not found in cache")
+            }
+            map[key] = value
+            return value
+        } finally {
+            lock.unlock()
+            futures.remove(key)
+        }
+
         // Подумай: можно ли вызывать loader под локом?
-        throw NotImplementedError()
     }
 
     fun getOrTimeout(key: K, timeout: Long, unit: TimeUnit): V? {
-        // TODO: жди появления ключа не дольше timeout, верни null если не дождался
-        return null
+        val startTime = System.currentTimeMillis()
+        var timeoutMs = unit.toMillis(timeout)
+
+        lock.withLock {
+            var now = System.currentTimeMillis()
+            while (!map.containsKey(key) && now - startTime < timeoutMs) {
+                keyAdded.await(timeoutMs - (now - startTime), TimeUnit.MILLISECONDS)
+                now = System.currentTimeMillis()
+            }
+            if (!map.containsKey(key)) {
+                return null
+            }
+            return map[key] ?: error("$key not found in cache")
+        }
     }
 
     fun size(): Int = lock.lock().let { try { map.size } finally { lock.unlock() } }

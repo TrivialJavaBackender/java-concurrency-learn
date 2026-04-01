@@ -1,5 +1,8 @@
 package exercises
 
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.LongAdder
+
 /**
  * УПРАЖНЕНИЕ 2: Producer-Consumer на wait/notify
  *
@@ -17,21 +20,40 @@ package exercises
 class BoundedBuffer(private val capacity: Int) {
     private val buffer = mutableListOf<Int>()
     private var finished = false
+    private var lock = Object()
 
-    @Synchronized
     fun put(value: Int) {
-        // TODO
+        synchronized(lock) {
+            while (buffer.size >= capacity) {
+                lock.wait()
+            }
+            buffer.add(value)
+            lock.notifyAll()
+        }
     }
 
-    @Synchronized
     fun take(): Int? {
-        // TODO
-        return null
+        synchronized(lock) {
+            while (buffer.isEmpty() && !finished) {
+                lock.wait()
+            }
+
+            if (buffer.isEmpty()) {
+                return null
+            }
+
+            val res = buffer.removeAt(0)
+            lock.notifyAll()
+
+            return res
+        }
     }
 
-    @Synchronized
     fun markFinished() {
-        // TODO
+        synchronized(lock) {
+            finished = true
+            lock.notifyAll()
+        }
     }
 }
 
@@ -40,10 +62,26 @@ fun main() {
     val producerCount = 3
     val consumerCount = 2
 
-    // TODO: Запусти 3 producer'а (каждый кладёт числа 1..20)
-    // TODO: Запусти 2 consumer'а (каждый суммирует числа до сигнала завершения)
-    // TODO: После завершения producer'ов — сигнализируй о конце
-    // TODO: Дождись всех потоков и напечатай общую сумму (должна быть 630)
+    val sum = AtomicInteger()
 
+    val producers = (1..producerCount).map {
+        Thread {
+            (1..20).forEach { buffer.put(it) }
+        }
+    }.onEach { it.start() }
+
+    val consumers = (1..consumerCount).map {
+        Thread {
+            do {
+                val value = buffer.take()?.let { sum.addAndGet(it) }
+            } while (value != null)
+        }
+    }.onEach { it.start() }
+
+    producers.forEach { it.join() }
+    buffer.markFinished()
+    consumers.forEach { it.join() }
+
+    println("Sum: ${sum.get()}")
     println("Expected sum: 630")
 }
