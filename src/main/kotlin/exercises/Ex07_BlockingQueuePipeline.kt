@@ -1,7 +1,9 @@
 package exercises
 
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * УПРАЖНЕНИЕ 7: Pipeline на BlockingQueue
@@ -22,18 +24,49 @@ import java.util.concurrent.LinkedBlockingQueue
 
 val POISON_PILL = -1
 
+fun generator(q: BlockingQueue<Int>) {
+    (1..100).forEach { q.put(it) }
+    q.put(POISON_PILL)
+}
+
+fun transformer(from: BlockingQueue<Int>, to: BlockingQueue<Int>) {
+    var fromValue = from.take()
+    while (fromValue != POISON_PILL) {
+        to.put(fromValue * fromValue)
+        fromValue = from.take()
+    }
+    from.put(POISON_PILL)
+    to.put(POISON_PILL)
+}
+
+fun aggregator(q: BlockingQueue<Int>, sum: AtomicInteger) {
+    var pills = 0
+    while (pills < 3) {
+        val fromValue = q.take()
+        if (fromValue == POISON_PILL) {
+            pills++
+        } else {
+            sum.addAndGet(fromValue)
+        }
+    }
+}
+
 fun main() {
     val queue1 = ArrayBlockingQueue<Int>(10)  // bounded — generator блокируется если переполнена
     val queue2 = LinkedBlockingQueue<Int>()    // unbounded
 
-    // TODO: Generator thread — генерирует числа 1..100, затем сигнализирует о завершении
+    val sum = AtomicInteger()
 
-    // TODO: 3 Transformer threads — берут числа из queue1, возводят в квадрат, кладут в queue2
-    //       корректно обрабатывают сигнал завершения и передают его дальше
+    val genThread = Thread { generator(queue1) }
+    val transformers = (1..3).map { Thread { transformer(queue1, queue2) } }
+    val aggregator = Thread { aggregator(queue2, sum) }
 
-    // TODO: Aggregator thread — суммирует результаты из queue2 до получения сигнала завершения
+    val threads = transformers + genThread + aggregator
 
-    // TODO: Дождись всех потоков
+    threads.forEach { it.start() }
+    threads.forEach { it.join() }
+
+    println("Actual: ${sum.get()}")
 
     println("Expected: 338350")
 }

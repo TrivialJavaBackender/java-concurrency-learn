@@ -57,9 +57,11 @@ fun raceDemo() {
     repeat(20) { run ->
         val map = ConcurrentHashMap<String, String>()
         val winners = AtomicInteger(0)
+        val latch = CountDownLatch(1)
 
         val threads = (1..10).map { i ->
             Thread {
+                latch.await()
                 if (!map.containsKey("owner")) {
                     map["owner"] = Thread.currentThread().name
                     winners.incrementAndGet()
@@ -68,24 +70,29 @@ fun raceDemo() {
             }
         }
         threads.forEach { it.start() }
+        latch.countDown()
         threads.forEach { it.join() }
 
         println("  Run ${run + 1}: winners=${winners.get()}, owner=${map["owner"]}")
     }
 
     println("\n=== Часть B: атомарная операция ===")
+
     repeat(5) { run ->
         val map = ConcurrentHashMap<String, String>()
         val winners = AtomicInteger(0)
 
+        val latch = CountDownLatch(1)
         val threads = (1..10).map { i ->
             Thread {
+                latch.await()
                 if (map.putIfAbsent("owner", Thread.currentThread().name) == null)
                     winners.incrementAndGet()
 
             }
         }
         threads.forEach { it.start() }
+        latch.countDown()
         threads.forEach { it.join() }
 
         println("  Run ${run + 1}: winners=${winners.get()}, owner=${map["owner"]}")
@@ -95,7 +102,7 @@ fun raceDemo() {
 // ===== Задание 3: Event Bus =====
 
 class SimpleEventBus {
-    val listeners = mutableListOf<(String) -> Unit>()
+    val listeners = CopyOnWriteArrayList<(String) -> Unit>()
 
     fun subscribe(listener: (String) -> Unit) {
         listeners.add(listener)

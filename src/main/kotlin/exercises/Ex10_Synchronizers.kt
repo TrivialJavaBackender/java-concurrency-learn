@@ -1,9 +1,12 @@
 package exercises
 
+import java.lang.Math.random
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
 import java.util.concurrent.Semaphore
 import java.util.concurrent.Exchanger
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.measureTime
 
 /**
  * УПРАЖНЕНИЕ 10: Synchronizers
@@ -35,21 +38,44 @@ fun task1_countDownLatch() {
 
     // TODO: Создай 5 потоков-бегунов:
     //   каждый ждёт стартового сигнала, затем "бежит" (sleep 100-500ms), затем сигнализирует о финише
-    // Дай сигнал старта и дождись финиша всех
+
+    val runners = (1..5).map {
+        Thread {
+            startSignal.await()
+            Thread.sleep((random() * 1000).toLong())
+            println("Thread $it finished")
+            finishSignal.countDown()
+        }
+    }
+
+    runners.forEach { it.start() }
+    startSignal.countDown()
+    finishSignal.await()
+
+    println("All threads finished")
 }
 
 // ===== Задание 2: CyclicBarrier =====
 
 fun task2_cyclicBarrier() {
-    var phase = 1
+    var phase = AtomicInteger(0)
     val barrier = CyclicBarrier(3) {
-        println("=== Phase $phase complete ===")
-        phase++
+        println("=== Phase ${phase.incrementAndGet()} complete ===")
+
     }
 
-    // TODO: Создай 3 потока, каждый выполняет 3 фазы.
-    // В каждой фазе: обработка (sleep) + ожидание остальных на барьере
-    // Дождись завершения всех потоков
+    val runners = (1..3).map { threadNumber ->
+        Thread {
+            repeat(3) {
+                Thread.sleep((random() * 1000).toLong())
+                println("Thread $threadNumber finished barrier")
+                barrier.await()
+            }
+        }
+    }.onEach { it.start() }
+
+    runners.forEach { it.join() }
+
 }
 
 // ===== Задание 3: Semaphore =====
@@ -57,9 +83,25 @@ fun task2_cyclicBarrier() {
 fun task3_semaphore() {
     val semaphore = Semaphore(3) // только 3 одновременно
 
-    // TODO: Создай 10 потоков, каждый захватывает доступ к ресурсу, использует его 500ms, освобождает
-    // Покажи в логах сколько потоков работает одновременно
-    // Дождись всех потоков
+    val threads = (1..10).map {
+        Thread {
+            semaphore.acquire()
+            try {
+                println("Thread $it acquired semaphore")
+                Thread.sleep(500)
+                println("Thread $it released semaphore")
+            } finally {
+                semaphore.release()
+            }
+        }
+    }
+
+    val totalTime = measureTime {
+        threads.forEach { it.start() }
+        threads.forEach { it.join() }
+    }
+
+    println("Total time: $totalTime")
 }
 
 // ===== Задание 4: Exchanger =====
@@ -67,9 +109,30 @@ fun task3_semaphore() {
 fun task4_exchanger() {
     val exchanger = Exchanger<List<Int>>()
 
-    // TODO: Producer 3 раза заполняет буфер [1..5] и обменивается с consumer'ом
-    // Consumer 3 раза получает полный буфер и обрабатывает
-    // Запусти оба в потоках, дождись завершения
+    val producer = Thread {
+        var buf: List<Int>
+        repeat(3) {
+            buf = (1..5).toList()
+            val emptyBuf = exchanger.exchange(buf)
+            buf = exchanger.exchange(emptyBuf)
+            println("Producer received back: $buf")
+        }
+    }
+
+    val consumer = Thread {
+        repeat(3) {
+            val unprocessedList = exchanger.exchange(emptyList())
+            println("Consumer received unprocessed data: $unprocessedList")
+            val processedList = unprocessedList.map { it * 123 }
+            exchanger.exchange(processedList)
+        }
+    }
+
+    producer.start()
+    consumer.start()
+
+    producer.join()
+    consumer.join()
 }
 
 fun main() {

@@ -44,25 +44,37 @@ fun fetchOrders(profile: Map<String, String>): CompletableFuture<List<Double>> {
 // ===== Задание 1: Chain =====
 
 fun task1_chain(username: String): CompletableFuture<Double> {
-    // TODO: Построй цепочку из fetchUserId → fetchUserProfile → fetchOrders → sum
-    // Обработай ошибки (вернуть 0.0 при ошибке)
-    return CompletableFuture.completedFuture(0.0)
+    return fetchUserId(username)
+        .thenCompose  { userId -> fetchUserProfile(userId) }
+        .thenCompose { userProfile -> fetchOrders(userProfile) }
+        .thenApply { orders -> orders.sum() }
+        .exceptionally {
+            println("Exception while processing: ${it.message}")
+            0.0
+        }
+
 }
 
 // ===== Задание 2: Parallel with allOf =====
 
 fun task2_parallel(): CompletableFuture<Map<String, String>> {
-    // TODO: Запусти 3 CompletableFuture параллельно (задержки 300ms, 200ms, 100ms)
-    // Дождись всех и собери результаты
-    return CompletableFuture.completedFuture(emptyMap())
+
+    val f1 = CompletableFuture.supplyAsync { Thread.sleep(300); "f1" to "300" }
+    val f2 = CompletableFuture.supplyAsync { Thread.sleep(200); "f2" to "200" }
+    val f3 = CompletableFuture.supplyAsync { Thread.sleep(100); "f3" to "100" }
+    val futures = listOf(f1, f2, f3)
+    return CompletableFuture.allOf(f1, f2, f3)
+        .thenApply { futures.map { it.get() }.toMap() }
 }
 
 // ===== Задание 3: Race with anyOf =====
 
+
 fun task3_race(): CompletableFuture<String> {
-    // TODO: 3 "зеркала" с разной задержкой (100ms, 300ms, 500ms)
-    // Верни результат первого завершившегося
-    return CompletableFuture.completedFuture("")
+    val f1 = CompletableFuture.supplyAsync { Thread.sleep(300); "300" }
+    val f2 = CompletableFuture.supplyAsync { Thread.sleep(200); "200" }
+    val f3 = CompletableFuture.supplyAsync { Thread.sleep(100); "100" }
+    return CompletableFuture.anyOf(f1, f2, f3).thenApply { v -> v as String }
 }
 
 fun main() {

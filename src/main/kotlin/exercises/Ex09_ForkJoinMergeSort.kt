@@ -2,6 +2,7 @@ package exercises
 
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.RecursiveTask
+import kotlin.math.max
 
 /**
  * УПРАЖНЕНИЕ 9: ForkJoinPool и RecursiveTask
@@ -29,10 +30,20 @@ class MergeSortTask(
     }
 
     override fun compute(): IntArray {
-        // TODO: Реализуй рекурсивный merge sort через fork/join
-        // При right - left <= THRESHOLD — сортируй напрямую
-        // Иначе — разбей на 2 половины, объедини результаты через merge()
-        return array.copyOfRange(left, right).also { it.sort() } // placeholder
+        if (right - left <= THRESHOLD) {
+            array.sort(left, right)
+            return array
+        } else {
+            val mid = left + (right - left) / 2
+            val leftTask = MergeSortTask(array, left, mid).fork()
+            val rightTask = MergeSortTask(array, mid, right)
+
+            val rightPart = rightTask.compute()
+            val leftPart = leftTask.join()
+            val merged = merge(leftPart.copyOfRange(left, mid), rightPart.copyOfRange(mid, right))
+            merged.copyInto(array, left)
+            return array
+        }
     }
 
     private fun merge(a: IntArray, b: IntArray): IntArray {
@@ -59,17 +70,29 @@ class MaxFinderTask(
     }
 
     override fun compute(): Int {
-        // TODO: Реализуй параллельный поиск максимума через fork/join
-        // При right - left <= THRESHOLD — линейный поиск в диапазоне
-        // Иначе — разбей и объедини результаты
-        return array.copyOfRange(left, right).max()
+
+        if (right - left <= THRESHOLD) {
+            var max = Int.MIN_VALUE
+            for (i in left..<right) {
+                max = max(max, array[i])
+            }
+            return max
+        } else {
+            val mid = left + (right - left) / 2
+            val leftTask = MaxFinderTask(array, left,mid).fork()
+            val rightTask = MaxFinderTask(array, mid, right)
+            val rightMax = rightTask.compute()
+            val leftMax = leftTask.join()
+            return Math.max(leftMax, rightMax)
+        }
     }
 }
 
 fun main() {
     val pool = ForkJoinPool()
-    val size = 1_000_000
+    val size = 10_000_000
     val array = IntArray(size) { (Math.random() * size).toInt() }
+    val array2 = array.clone()
 
     // Merge Sort
     val start = System.nanoTime()
@@ -77,7 +100,7 @@ fun main() {
     val forkJoinTime = (System.nanoTime() - start) / 1_000_000
 
     val start2 = System.nanoTime()
-    val sorted2 = array.clone().also { it.sort() }
+    val sorted2 = array2.also { it.sort() }
     val singleTime = (System.nanoTime() - start2) / 1_000_000
 
     println("ForkJoin sort: ${forkJoinTime}ms")
