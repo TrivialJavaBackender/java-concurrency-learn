@@ -250,7 +250,55 @@ future.get() → CancellationException
 
 ---
 
-## 5. CompletableFuture — полный разбор
+## 5. Future / FutureTask / CompletableFuture — сравнение
+
+| | `Future<V>` | `FutureTask<V>` | `CompletableFuture<V>` |
+|---|---|---|---|
+| Что такое | Интерфейс | Реализует `Future` + `Runnable` | Реализует `Future` + `CompletionStage` |
+| Завершить вручную | ❌ | ❌ (только через `run()`) | ✅ `complete(v)` |
+| Запустить вручную | ❌ | ✅ `run()` | ❌ |
+| Гарантия "1 раз" | — | ✅ повторные `run()` — no-op | — |
+| Цепочки / callback | ❌ | ❌ | ✅ |
+| Комбинирование | ❌ | ❌ | ✅ `allOf`, `anyOf` |
+| Обработка ошибок | try-catch на `get()` | try-catch на `get()` | `exceptionally`, `handle` |
+
+### FutureTask
+
+`FutureTask` оборачивает `Callable` и запускается вручную через `run()`.
+Ключевое свойство: сколько бы раз ни вызвали `run()` — `Callable` выполнится **ровно 1 раз**, остальные вызовы — no-op. Это делает его незаменимым для паттерна "вычисли один раз среди N конкурентных потоков".
+
+```java
+// Паттерн: "вычисли один раз, лок не держи"
+private final ConcurrentHashMap<K, FutureTask<V>> futures = new ConcurrentHashMap<>();
+
+V getOrCompute(K key, Callable<V> loader) throws Exception {
+    // computeIfAbsent атомарно кладёт задачу — только один FutureTask на ключ
+    FutureTask<V> task = futures.computeIfAbsent(key, k -> new FutureTask<>(loader));
+    task.run();       // первый вызов запускает loader, остальные — no-op
+    V value = task.get(); // блокирует пока не готово
+    futures.remove(key);  // почистить после использования
+    return value;
+}
+```
+
+**Почему не `synchronized` + проверка?**
+```
+Поток A: нет в кэше → вычисляет... (долго)
+Поток B: нет в кэше → вычисляет... (долго)  ← оба запускают loader!
+
+С FutureTask:
+Поток A: computeIfAbsent → создаёт FutureTask → run() → вычисляет...
+Поток B: computeIfAbsent → возвращает тот же FutureTask → run() → no-op → get() ждёт A
+```
+
+**Когда использовать FutureTask:**
+- Нужна гарантия "один раз" без удержания лока во время вычисления
+- Ленивая инициализация дорогого ресурса
+- Кэш с конкурентной загрузкой
+
+---
+
+## 6. CompletableFuture — полный разбор
 
 ### Создание
 
@@ -417,7 +465,7 @@ CF<List<String>> allResults = CF.allOf(futures.toArray(new CF[0]))
 
 ---
 
-## 6. ForkJoinPool — подробно
+## 7. ForkJoinPool — подробно
 
 ### Work-Stealing
 
@@ -478,7 +526,7 @@ ForkJoinPool.commonPool()  // Shared pool, используется:
 
 ---
 
-## 7. Invoking Collections of Tasks
+## 8. Invoking Collections of Tasks
 
 ```java
 // invokeAll — все задачи, ждать всех
@@ -504,7 +552,7 @@ for (int i = 0; i < tasks.size(); i++) {
 
 ---
 
-## 8. Шпаргалка: что использовать
+## 9. Шпаргалка: что использовать
 
 ```
 Задача → результат?
