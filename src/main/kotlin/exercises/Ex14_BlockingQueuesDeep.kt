@@ -1,6 +1,8 @@
 package exercises
 
 import java.util.concurrent.*
+import kotlin.time.Duration
+import kotlin.time.measureTime
 
 /**
  * УПРАЖНЕНИЕ 14: BlockingQueue — все разновидности
@@ -31,11 +33,40 @@ import java.util.concurrent.*
 fun task1_synchronousQueue() {
     val queue = SynchronousQueue<String>()
 
-    // TODO: Запусти producer и consumer в отдельных потоках
-    // Producer передаёт 5 элементов, Consumer обрабатывает с задержкой 500ms
-    // Логируй каждый шаг, дождись завершения
-
     println("SynchronousQueue demo")
+
+    val producer = Thread {
+        var elapsedTime = Duration.ZERO
+        repeat(5) {
+            val value: String
+            elapsedTime += measureTime {
+                println("Sending an element to queue: $it")
+                value = "Value-$it"
+                queue.put(value)
+            }
+            println("Sent data to queue: $value. Elapsed time: $elapsedTime")
+        }
+    }
+
+    val consumer = Thread {
+        var elapsedTime = Duration.ZERO
+        repeat(5) {
+            val value: String
+            elapsedTime += measureTime {
+                println("Waiting for an element from the queue: $it")
+                value = queue.take()
+                println("Received data from queue: $value")
+                Thread.sleep(500)
+            }
+            println("Processed data from queue: $value. Elapsed time: $elapsedTime")
+        }
+    }
+
+    producer.start()
+    consumer.start()
+
+    producer.join()
+    consumer.join()
 }
 
 // ===== Задание 2: PriorityBlockingQueue =====
@@ -50,9 +81,31 @@ data class PriorityTask(
 fun task2_priorityQueue() {
     val queue = PriorityBlockingQueue<PriorityTask>()
 
-    // TODO: Добавь 5 задач с приоритетами 10, 1, 5, 2, 7 в указанном порядке
-    // Worker: извлекай задачи из очереди и обрабатывай
-    // Убедись что порядок обработки соответствует приоритету
+
+    val tasks = listOf(10, 1, 5, 2, 7)
+
+    val producer = Thread {
+        tasks.forEach {
+            queue.put(PriorityTask("Task #$it", priority = it))
+        }
+    }
+
+    val consumer = Thread {
+        Thread.sleep(500)
+        println("РАБотник проснулся. Опять за работу!")
+        repeat(5) {
+            val value = queue.take()
+            println("Получил работу: $value. РАБотаю...")
+            Thread.sleep(500)
+            println("Cлавно поработал над задачей $value")
+        }
+    }
+
+    producer.start()
+    consumer.start()
+
+    producer.join()
+    consumer.join()
 }
 
 // ===== Задание 3: DelayQueue =====
@@ -76,9 +129,29 @@ class ScheduledItem(
 fun task3_delayQueue() {
     val queue = DelayQueue<ScheduledItem>()
 
-    // TODO: Добавь Task-A(3s), Task-B(1s), Task-C(2s)
-    // Worker: извлекай задачи и логируй время выполнения
-    // Подумай в каком порядке они выйдут
+    val delays = listOf("A" to 3L, "B" to 1L, "C" to 2L)
+
+    val producer = Thread {
+        delays.forEach {
+            queue.put(ScheduledItem("Task-${it.first}", it.second * 1000L))
+        }
+    }
+
+    val consumer = Thread {
+        Thread.sleep(500)
+        println("РАБотник проснулся. Опять за работу!")
+        repeat(3) {
+            val value = queue.take()
+            println("Получил работу: ${value.name} РАБотаю...")
+            println("Cлавно поработал над задачей ${value.name}")
+        }
+    }
+
+    producer.start()
+    consumer.start()
+
+    producer.join()
+    consumer.join()
 }
 
 // ===== Задание 4: LinkedTransferQueue =====
@@ -86,18 +159,137 @@ fun task3_delayQueue() {
 fun task4_transferQueue() {
     val queue = LinkedTransferQueue<String>()
 
-    // TODO: Запусти consumer с задержкой 2 секунды
-    // Producer: сравни поведение put(), transfer() и tryTransfer()
-    // Логируй каждый шаг с временными метками
+
+    val producer = Thread {
+        var elapsedTime = Duration.ZERO
+        println("Король проснулся.")
+        repeat(5) {
+            val value: String
+            elapsedTime += measureTime {
+                println("Король: Отправляю работу батракам: $it")
+                value = "Работа-$it"
+                queue.transfer(value)
+            }
+            println("Король: Отправил работу батраку: $value. Прошли времени с начала работы: $elapsedTime")
+        }
+
+        repeat(5) {
+            val value: String
+            elapsedTime += measureTime {
+                println("Король: Отправляю еще больше работы батракам: $it")
+                value = "Работа-$it"
+                while (!queue.tryTransfer(value)) {
+                    println("Никто не принял работы. Глупые батраки!")
+                    Thread.sleep(500)
+                }
+
+            }
+            println("Король: Отправил работу батраку: $value. Прошло времени с начала работы: $elapsedTime")
+        }
+    }
+
+    val consumer = Thread {
+        var elapsedTime = Duration.ZERO
+        repeat(5) {
+            val value: String
+            elapsedTime += measureTime {
+                println("Батрак: Жду работы!")
+                value = queue.take()
+                println("Батрак: Получил работу: $value")
+                Thread.sleep(500)
+            }
+            println("Батрак: Сделал работу $value. Прошло времени с начала работы: $elapsedTime")
+        }
+
+        println("Батрак: Работа сделана! Пора и поспать")
+        Thread.sleep(2000)
+        println("Батрак: Проснулсяя!")
+
+        repeat(5) {
+            val value: String
+            elapsedTime += measureTime {
+                println("Батрак: Жду работы!")
+                value = queue.take()
+                println("Батрак: Получил работу: $value")
+                Thread.sleep(500)
+            }
+            println("Батрак: Сделал работу $value. Прошло времени с начала работы: $elapsedTime")
+        }
+    }
+
+    producer.start()
+    consumer.start()
+
+    producer.join()
+    consumer.join()
 }
 
 // ===== Задание 5: Fair ArrayBlockingQueue =====
 
 fun task5_fairQueue() {
-    // TODO: Создай ArrayBlockingQueue(1, fair=true), заполни его одним элементом
-    // Запусти 5 потоков в определённом порядке, каждый ждёт места для put()
-    // Медленно освобождай очередь из main и логируй порядок
-    // Повтори с fair=false и сравни поведение
+
+    val окноПолученияЗарплаты = ArrayBlockingQueue<String>(1, true)
+
+    val батракСчетовод = Thread({
+        val name = Thread.currentThread().name
+        repeat(5) {
+            println("$name: Ну, Кто там следующий?")
+            val батракЗаЗарплатой = окноПолученияЗарплаты.take()
+            println("$name: Выдаю зарплату батраку ${батракЗаЗарплатой}")
+            Thread.sleep(500)
+        }
+
+        println("$name: Все, всем зарплату раздал")
+
+    }, "Батрак счетовод")
+
+    val батракиРаботяги = (1..5).map {
+        Thread {
+            val name = "Батрак-$it"
+            println("$name: Я пришел за зарплатой! Наконец-то зарплата")
+            окноПолученияЗарплаты.put(name)
+            println("$name: Наконец-то мне выдадут зарплату!")
+        }
+    }.onEach { it.start(); Thread.sleep(50) }
+
+    Thread.sleep(500)
+
+    батракСчетовод.start()
+    батракСчетовод.join()
+    батракиРаботяги.onEach { it.join() }
+}
+
+fun task5_unfairQueue() {
+
+    val окноПолученияЗарплаты = ArrayBlockingQueue<String>(1, false)
+
+    val батракСчетовод = Thread({
+        val name = Thread.currentThread().name
+        repeat(5) {
+            println("$name: Ну, Кто там следующий?")
+            val батракЗаЗарплатой = окноПолученияЗарплаты.take()
+            println("$name: Выдаю зарплату батраку ${батракЗаЗарплатой}")
+            Thread.sleep(100)
+        }
+
+        println("$name: Все, всем зарплату раздал")
+
+    }, "Батрак счетовод")
+
+    val батракиРаботяги = (1..5).map {
+        Thread {
+            val name = "Батрак-$it"
+            println("$name: Я пришел за зарплатой! Наконец-то зарплата")
+            окноПолученияЗарплаты.put(name)
+            println("$name: Наконец-то мне выдадут зарплату!")
+        }
+    }.onEach { it.start(); Thread.sleep(10) }
+
+    Thread.sleep(500)
+
+    батракСчетовод.start()
+    батракСчетовод.join()
+    батракиРаботяги.onEach { it.join() }
 }
 
 fun main() {
@@ -115,4 +307,7 @@ fun main() {
 
     println("\n=== Task 5: Fair ArrayBlockingQueue ===")
     task5_fairQueue()
+
+    println("\n=== Task 5: Unfair ArrayBlockingQueue ===")
+    task5_unfairQueue()
 }

@@ -34,9 +34,12 @@ class LazyCache<K, V>(private val loader: (K) -> V) {
     val computeCount = AtomicInteger(0)
 
     fun get(key: K): V {
-        // TODO: загружай значение ровно один раз при конкурентном доступе
-        // отслеживай количество вызовов loader через computeCount
-        return loader(key) // placeholder
+        val value = cache.computeIfAbsent(key) {
+            computeCount.incrementAndGet()
+            loader(key)
+        }
+
+        return value
     }
 }
 
@@ -67,12 +70,37 @@ fun task2_frequencyCounter() {
         arrayOf("/api/users", "/api/orders", "/api/users", "/health"),
         arrayOf("/api/orders", "/api/users", "/health", "/api/products"),
         arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
+        arrayOf("/api/users", "/api/products", "/api/users", "/api/orders"),
     )
     val frequency = ConcurrentHashMap<String, Int>()
 
-    // TODO: Запусти 3 потока параллельно (по одному на каждый массив логов)
-    // Атомарно накапливай счётчики без synchronized
-    // Дождись всех потоков, напечатай результат
+    val workers = logs.map { list ->
+        Thread {
+            list.forEach { api ->
+                frequency.merge(api, 1) { v1, v2 ->
+                    v1 + v2
+                }
+            }
+        }
+    }.onEach { it.start() }
+    workers.forEach { it.join() }
 
     println("Frequency: $frequency")
 }
@@ -85,9 +113,18 @@ fun task3_bulkOperations() {
         stats["page-$i"] = (Math.random() * 2000).toLong()
     }
 
-    // TODO: напечатай все страницы с > 1500 просмотров (bulk операция)
-    // TODO: найди суммарное количество просмотров (bulk reduce)
-    // TODO: найди первую страницу с > 1900 просмотрами (bulk search)
+    stats.forEach(125) { k, v ->
+        if (v > 1500) println("$k: $v views")
+    }
+
+    val sum = stats.reduceValuesToLong(125, { it }, 0) { v1, v2 ->
+        v1 + v2
+    }
+    println("Sum: $sum")
+
+    val firstSearch = stats.search(125) { k, v -> if (v > 1900) k else null }
+
+    println("First page with 1900 views: $firstSearch")
 }
 
 // ===== Задание 4: compute vs merge =====
@@ -106,9 +143,18 @@ fun task4_computeVsMerge() {
         else newVal
     }
 
-    // TODO: Реализуй "expiring counter":
-    // Инкрементируй "counter", при превышении 5 — удаляй запись (сброс)
-    // 10 потоков по 3 инкремента — что получится?
+    val workers = (1..10).map {
+        Thread {
+            repeat(3) {
+                map.compute("visits") { _, v ->
+                    val newVal = (v ?: 0) + 1
+                    if (newVal > 5) null
+                    else newVal
+                }
+            }
+        }
+    }.onEach { it.start() }
+    workers.forEach { it.join() }
 
     println("compute vs merge demo done, visits=${map["visits"]}")
 }

@@ -1,9 +1,12 @@
 package exercises
 
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
+import kotlin.time.measureTime
 
 /**
  * УПРАЖНЕНИЕ 15: ConcurrentSkipListMap, Sets, newKeySet
@@ -27,29 +30,56 @@ import java.util.concurrent.CopyOnWriteArraySet
 // ===== Задание 1: Sorted Leaderboard =====
 
 class Leaderboard {
-    private val scores = ConcurrentSkipListMap<Int, String>()
+    data class PlayerScore(val score: Int, val player: String) : Comparable<PlayerScore> {
+        override fun compareTo(other: PlayerScore): Int {
+            val scoreCompare = score.compareTo(other.score)
+            return if (scoreCompare != 0) scoreCompare else player.compareTo(other.player)
+        }
+    }
+
+    private val scores = ConcurrentSkipListSet<PlayerScore>()
     private val playerScores = ConcurrentHashMap<String, Int>()
+    private val lock = ReentrantReadWriteLock()
 
     fun updateScore(player: String, score: Int) {
-        // TODO: Обнови счёт игрока атомарно
+        lock.write {
+            playerScores[player]?.let { playerScore -> scores.remove(PlayerScore(playerScore, player)) }
+            playerScores[player] = score
+            scores.add(PlayerScore(score, player))
+        }
     }
 
     fun topN(n: Int): List<Pair<String, Int>> {
-        // TODO: Верни N лучших (наибольший score первым)
-        return emptyList()
+        lock.read {
+            return scores.reversed().take(n).map { v ->
+                v.player to v.score
+            }
+        }
     }
 
     fun playersAboveScore(minScore: Int): Map<Int, String> {
-        // TODO: Верни игроков с score >= minScore
-        return emptyMap()
+        lock.read {
+            return scores.tailSet(PlayerScore(minScore, "")).map { it.score to it.player }.toMap()
+        }
     }
 }
 
 fun task1_leaderboard() {
     val board = Leaderboard()
 
-    // TODO: 5 потоков, каждый обновляет счёт 10 случайных игроков (игроки: "player-1".."player-10")
-    // Дождись всех, напечатай Top 5 и игроков с score > 500
+    val workers = (1..5).map {
+        Thread {
+            repeat(10) {
+                board.updateScore("player-${(Math.random() * 10).toInt() + 1}", (Math.random() * 1000).toInt())
+            }
+        }
+    }.onEach { it.start() }
+
+    workers.forEach { it.join() }
+
+    println("Top 5 players: ${board.topN(5)}")
+    println("Players with >500 score: ${board.playersAboveScore(500)}")
+
 
     println("Leaderboard demo")
 }
@@ -66,29 +96,61 @@ data class TimestampedEvent(
 fun task2_sortedEvents() {
     val events = ConcurrentSkipListSet<TimestampedEvent>()
 
-    // TODO: 3 потока, каждый добавляет 10 событий с текущим timestamp
-    // Дождись всех потоков
-    // Запроси события за последние 100ms
-    // Напечатай количество недавних событий
+    val start = System.currentTimeMillis()
+    val workers = (1..3).map {
+        Thread {
+            repeat(10) {
+                val delay = (Math.random() * 20 + 20).toLong()
+                val timestamp = System.currentTimeMillis() - start
+                events += TimestampedEvent(timestamp, "${Thread.currentThread().name}-$timestamp")
+                Thread.sleep(delay)
+            }
+        }
+    }.onEach { it.start() }
+    workers.forEach { it.join() }
 
-    println("Sorted events demo")
+    val latestsEvents = events.tailSet(TimestampedEvent(System.currentTimeMillis() - 100 - start, ""))
+    println("Latest events: $latestsEvents. Size: ${latestsEvents.size}")
 }
 
 // ===== Задание 3: newKeySet vs CopyOnWriteArraySet =====
 
 fun task3_setBenchmark() {
-    val iterations = 10_000
+    val iterations = 100_000
     val threads = 10
 
     val chmSet = ConcurrentHashMap.newKeySet<String>()
     val cowSet = CopyOnWriteArraySet<String>()
 
-    // TODO: Замерь время параллельного добавления для обоих Set
-    // TODO: Замерь время итерации (forEach) при параллельных записях для обоих
-    // TODO: Напечатай и сравни результаты
-    // Объясни: когда выбрать newKeySet, а когда CopyOnWriteArraySet?
+    val chmWorkers = (1..threads).map {
+        Thread {
+            (1..iterations).forEach { chmSet.add("$it") }
+        }
+    }
+    val chmTime = measureTime {
+        chmWorkers.forEach { it.start() }
+        chmWorkers.forEach { it.join() }
+    }
 
-    println("Set benchmark demo")
+
+    val cowWorkers = (1..threads).map {
+        Thread {
+            (1..iterations).forEach { cowSet.add("$it") }
+        }
+    }
+    val cowTime = measureTime {
+        cowWorkers.forEach { it.start() }
+        cowWorkers.forEach { it.join() }
+    }
+
+    println("CHM Time: $chmTime, COW Time: $cowTime")
+
+
+    val chmIterate = measureTime({ chmSet.forEach { print("") } })
+    val cowIterate = measureTime({ cowSet.forEach { print("") } })
+
+    println("CHM Iterate: $chmIterate, COW Iterate: $cowIterate")
+
 }
 
 fun main() {

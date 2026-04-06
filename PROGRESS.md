@@ -17,21 +17,21 @@
 
 | # | Упражнение | Тема | Статус |
 |---|-----------|------|--------|
-| 01 | ThreadBasics | Потоки, synchronized, wait/notify | ⬜ |
-| 02 | ProducerConsumer | Bounded buffer, wait/notify | ⬜ |
-| 03 | ReentrantLockCache | ReentrantLock, Condition, getOrCompute | ⬜ |
-| 04 | ReadWriteLock | MetricsStore, lock downgrade, benchmark | ⬜ |
+| 01 | ThreadBasics | Потоки, synchronized, wait/notify | ✅ |
+| 02 | ProducerConsumer | Bounded buffer, wait/notify | ✅ |
+| 03 | ReentrantLockCache | ReentrantLock, Condition, getOrCompute | ✅ |
+| 04 | ReadWriteLock | MetricsStore, lock downgrade, benchmark | ✅ |
 | 05 | AtomicCounter | CAS, Treiber Stack, LongAdder | ✅ |
-| 06 | ConcurrentMapWordCount | CHM merge, COWAL event bus | ⬜ |
-| 07 | BlockingQueuePipeline | ABQ, LBQ, pipeline, poison pill | ⬜ |
-| 08 | CompletableFutureChain | CF цепочки, allOf, anyOf | ⬜ |
-| 09 | ForkJoinMergeSort | ForkJoinPool, RecursiveTask | ⬜ |
-| 10 | Synchronizers | Latch, Barrier, Semaphore, Exchanger | ⬜ |
-| 11 | DeadlockDetection | Deadlock, ThreadMXBean, prevention | ⬜ |
-| 12 | VirtualThreads | Virtual Threads, pinning (Java 21+) | ⬜ |
-| 13 | CHM Advanced | computeIfAbsent, merge, bulk ops | ⬜ |
-| 14 | BlockingQueues Deep | SynchronousQ, PriorityBQ, DelayQ, TransferQ | ⬜ |
-| 15 | SkipList & Sets | ConcurrentSkipListMap, newKeySet, COWAS | ⬜ |
+| 06 | ConcurrentMapWordCount | CHM merge, COWAL event bus | ✅ |
+| 07 | BlockingQueuePipeline | ABQ, LBQ, pipeline, poison pill | ✅ |
+| 08 | CompletableFutureChain | CF цепочки, allOf, anyOf | ✅ |
+| 09 | ForkJoinMergeSort | ForkJoinPool, RecursiveTask | ✅ |
+| 10 | Synchronizers | Latch, Barrier, Semaphore, Exchanger | ✅ |
+| 11 | DeadlockDetection | Deadlock, ThreadMXBean, prevention | ✅ |
+| 12 | VirtualThreads | Virtual Threads, pinning (Java 21+) | ✅ |
+| 13 | CHM Advanced | computeIfAbsent, merge, bulk ops | ✅ |
+| 14 | BlockingQueues Deep | SynchronousQ, PriorityBQ, DelayQ, TransferQ | ✅ |
+| 15 | SkipList & Sets | ConcurrentSkipListMap, newKeySet, COWAS | ✅ |
 | 16 | ExecutorService Deep | Все типы пулов, rejection policies, shutdown | ⬜ |
 | 17 | CF Advanced | thenCombine, handle, retry, timeout | ⬜ |
 | 18 | Scheduled & ForkJoin | Rate vs Delay, rate limiter, map-reduce | ⬜ |
