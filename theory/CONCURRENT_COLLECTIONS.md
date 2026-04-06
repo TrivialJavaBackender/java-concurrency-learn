@@ -324,26 +324,101 @@ while (true) {
 
 ## 6. Collections.synchronizedXxx vs Concurrent
 
-```
-              Collections.synchronized*           Concurrent*
-Механизм:    Обёртка с synchronized(mutex)       Специальные алгоритмы
-Granularity:  Весь collection                    Bucket/segment/node
-Throughput:   Низкий (один lock)                 Высокий
-Iterator:     Fail-fast (CME!)                   Weakly consistent
-Compound ops: НЕ атомарны!                      Атомарны (putIfAbsent и др.)
-```
+### Механизм работы
+
+`Collections.synchronizedXxx` — это тонкая обёртка: каждый метод оборачивается в `synchronized(mutex)`, где `mutex` — сам объект-обёртка. Никакой новой логики.
 
 ```java
-// ❌ synchronizedMap — compound op НЕ атомарна
+// Что происходит внутри (упрощённо):
+public V get(Object key) {
+    synchronized (mutex) { return map.get(key); }
+}
+public V put(K key, V value) {
+    synchronized (mutex) { return map.put(key, value); }
+}
+```
+
+`ConcurrentHashMap`, `CopyOnWriteArrayList` и другие Concurrent-коллекции — специально спроектированные структуры данных с тонкой блокировкой (на уровне bucket/node) или вообще без блокировок (CAS, lock-free).
+
+### Сравнительная таблица
+
+```
+Характеристика        Collections.synchronized*     java.util.concurrent.*
+─────────────────────────────────────────────────────────────────────────────
+Механизм              synchronized(this) на всём     Тонкие локи / CAS / COW
+Granularity           Весь объект (1 lock)           Bucket / node / segment
+Throughput            Низкий (полная сериализация)   Высокий (параллельный доступ)
+Iterator              Fail-fast (бросает CME!)       Weakly consistent (нет CME)
+Итерация              Нужен внешний synchronized     Безопасна без блокировки
+Compound-операции     НЕ атомарны!                   Атомарны (putIfAbsent и др.)
+Null-значения         Зависит от wrapped-коллекции   CHM: запрещены; COW: разрешены
+Накладные расходы     Минимальные (обёртка ~0 байт)  Выше (доп. поля и структуры)
+```
+
+### Главная ловушка — итерация в synchronizedXxx
+
+```java
 Map<K,V> map = Collections.synchronizedMap(new HashMap<>());
-// Race condition!
-if (!map.containsKey(key)) {   // может быть прерван
-    map.put(key, value);       // другой поток уже положил
+
+// ❌ НЕБЕЗОПАСНО: итерация без внешней блокировки → ConcurrentModificationException
+for (K key : map.keySet()) { ... }
+
+// ✅ Нужен явный synchronized на весь блок итерации
+synchronized (map) {
+    for (K key : map.keySet()) { ... }
+}
+```
+
+Это контрintuit'ивно: коллекция "thread-safe", а итерация — нет. Проблема в том, что итератор держит состояние снаружи lock'а.
+
+### Главная ловушка — compound-операции
+
+```java
+Map<K,V> map = Collections.synchronizedMap(new HashMap<>());
+
+// ❌ Race condition: два метода вызываются под разными lock'ами
+if (!map.containsKey(key)) {   // lock захвачен и отпущен
+    map.put(key, value);       // другой поток уже вставил ключ
 }
 
-// ✅ ConcurrentHashMap — атомарно
-map.putIfAbsent(key, value);
+// Чтобы сделать атомарно — нужен внешний synchronized:
+synchronized (map) {
+    if (!map.containsKey(key)) map.put(key, value);
+}
+
+// ✅ ConcurrentHashMap — атомарно без лишних усилий
+concurrentMap.putIfAbsent(key, value);
 ```
+
+### Когда synchronizedXxx всё же оправдан
+
+- Нужно сделать thread-safe **существующую** коллекцию с минимальными изменениями
+- Работа ведётся под **единым внешним lock'ом** (вся логика уже синхронизирована снаружи)
+- Коллекция маленькая и contention низкий — overhead от CHM не нужен
+- Нужна **точная семантика** обёрнутой коллекции (например, `LinkedHashMap` для LRU-кэша)
+
+```java
+// LRU-кэш с сохранением порядка — без ConcurrentHashMap не сделать
+Map<K,V> lruCache = Collections.synchronizedMap(
+    new LinkedHashMap<K,V>(16, 0.75f, true) {  // accessOrder=true
+        protected boolean removeEldestEntry(Map.Entry e) {
+            return size() > MAX_SIZE;
+        }
+    }
+);
+// Всё равно нужен внешний synchronized при итерации!
+```
+
+### Резюме
+
+| Если нужно...                         | Использовать                   |
+|---------------------------------------|-------------------------------|
+| Высокий concurrent доступ к Map        | `ConcurrentHashMap`           |
+| Атомарные compound-операции            | `ConcurrentHashMap`           |
+| Безопасная итерация без внешних локов  | `ConcurrentHashMap` / `COW*`  |
+| Обернуть существующую коллекцию        | `Collections.synchronized*`   |
+| `LinkedHashMap` (LRU) thread-safe      | `Collections.synchronized*`   |
+| Простота и всё под одним внешним локом | `Collections.synchronized*`   |
 
 > **Источник:** JCP §5.1, §5.2
 
@@ -388,3 +463,5 @@ map.putIfAbsent(key, value);
 5. Когда CopyOnWriteArrayList — плохой выбор?
 6. Как ConcurrentHashMap.size() считает количество элементов?
 7. Чем transfer() отличается от put() в LinkedTransferQueue?
+8. Почему итерация по `Collections.synchronizedMap` без внешнего `synchronized` небезопасна, хотя каждый метод синхронизирован?
+9. В каком случае `Collections.synchronizedMap(new LinkedHashMap<>(...))` предпочтительнее `ConcurrentHashMap`?
