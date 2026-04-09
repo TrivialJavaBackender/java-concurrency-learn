@@ -1,0 +1,11 @@
+# TODO: Реализуй docker-compose.yml
+# Сервисы:
+# - app (образ из Ex02 или ./.. build context)
+# - postgres:16-alpine
+# - redis:7-alpine
+#
+# Требования:
+# - depends_on с condition: service_healthy
+# - named volume для postgres
+# - healthcheck для каждого сервиса
+# - одна общая сеть

@@ -1,0 +1,5 @@
+# TODO: docker-compose стек для Loki + Promtail + Grafana + app
+# loki: grafana/loki:2.9.0
+# promtail: grafana/promtail:2.9.0
+# grafana: grafana/grafana:10.0.0
+# app: Spring Boot с JSON логами

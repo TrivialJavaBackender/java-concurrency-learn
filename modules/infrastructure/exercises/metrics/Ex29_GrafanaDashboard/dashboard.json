@@ -1,0 +1,13 @@
+{
+  "title": "TODO: Создай dashboard с 6 панелями",
+  "uid": "infra-learn-main",
+  "panels": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "30s"
+}

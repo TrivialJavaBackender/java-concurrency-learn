@@ -1,0 +1,5 @@
+# TODO: HorizontalPodAutoscaler
+# apiVersion: autoscaling/v2
+# minReplicas: 2, maxReplicas: 10
+# CPU targetAverageUtilization: 70
+# behavior.scaleDown с stabilizationWindowSeconds

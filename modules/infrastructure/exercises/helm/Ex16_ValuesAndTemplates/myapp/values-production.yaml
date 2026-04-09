@@ -1,0 +1,7 @@
+# TODO: Production overrides
+# replicaCount: больше
+# image.tag: другой
+# resources: больше
+# env: дополнительные переменные
+# ingress.enabled: true
+# ingress.host: myapp.example.com

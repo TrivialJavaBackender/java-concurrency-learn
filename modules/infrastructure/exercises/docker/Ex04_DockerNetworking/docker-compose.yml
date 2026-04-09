@@ -1,0 +1,4 @@
+# TODO: Реализуй docker-compose.yml с двумя изолированными сетями
+# frontend-net: frontend <-> backend
+# backend-net:  backend  <-> postgres
+# frontend НЕ должен иметь доступ к postgres напрямую

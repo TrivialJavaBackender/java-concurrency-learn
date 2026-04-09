@@ -1,0 +1,8 @@
+# TODO: Создай ConfigMap
+# apiVersion: v1
+# kind: ConfigMap
+# data:
+#   APP_ENV: production
+#   LOG_LEVEL: INFO
+#   DB_HOST: postgres-svc
+#   DB_PORT: "5432"

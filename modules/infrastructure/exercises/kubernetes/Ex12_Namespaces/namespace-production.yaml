@@ -1,0 +1,4 @@
+# TODO: Namespace production + ResourceQuota + LimitRange
+# Namespace: production
+# ResourceQuota: requests.cpu=8, requests.memory=16Gi
+# LimitRange: дефолтные requests 250m CPU, 256Mi RAM

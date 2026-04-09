@@ -1,0 +1,6 @@
+# TODO: Заполни Chart.yaml
+apiVersion: v2
+name: myapp
+# description: ?
+# version: ?      (semver версия chart)
+# appVersion: ?   (версия приложения)

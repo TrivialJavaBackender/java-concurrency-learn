@@ -1,0 +1,4 @@
+# TODO: Deployment, использующий ConfigMap и Secret
+# envFrom: configMapRef
+# env: valueFrom.secretKeyRef для DB_PASSWORD
+# volumes + volumeMounts для ConfigMap как файла

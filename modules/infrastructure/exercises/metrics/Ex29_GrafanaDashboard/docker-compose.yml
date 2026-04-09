@@ -1,0 +1,5 @@
+# TODO: Prometheus + Grafana + Spring Boot
+# grafana: grafana/grafana:10.0.0
+#   volumes: datasource provisioning + dashboard provisioning + dashboard.json
+# prometheus: prom/prometheus:v2.48.0
+# app: Spring Boot

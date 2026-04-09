@@ -1,0 +1,6 @@
+# TODO: Напиши PromQL запросы для latency percentile
+
+# p50 (медиана) для /api/orders
+# p95 для /api/orders
+# p99 для /api/orders
+# Средний RPS для /api/orders

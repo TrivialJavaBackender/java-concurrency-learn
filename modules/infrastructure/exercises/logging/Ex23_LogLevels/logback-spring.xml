@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- TODO: Настрой уровни логирования по профилям
+         production: root=INFO, org.springframework=WARN, by.pavel=INFO
+         !production: root=INFO, by.pavel=DEBUG -->
+</configuration>

@@ -1,0 +1,16 @@
+# Этот Dockerfile работает, но содержит несколько антипаттернов.
+# Найди все проблемы и напиши оптимальную версию в Dockerfile.
+
+FROM maven:latest
+
+WORKDIR /app
+
+COPY . .
+
+RUN apt-get update
+RUN apt-get install -y curl
+RUN mvn package
+
+EXPOSE 8080
+
+CMD java -jar target/Infrastructure-Learn-1.0-SNAPSHOT.jar

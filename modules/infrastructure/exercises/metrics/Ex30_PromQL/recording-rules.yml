@@ -1,0 +1,11 @@
+# TODO: Recording rules для часто используемых тяжёлых запросов
+# groups:
+#   - name: app-recording-rules
+#     interval: 1m
+#     rules:
+#       - record: job:http_requests:rate5m
+#         expr: ...
+#       - record: job:http_errors:rate5m
+#         expr: ...
+#       - record: job:http_request_duration_p99:rate5m
+#         expr: ...

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- TODO: Реализуй конфигурацию Logback
+         Production профиль: JSON через LogstashEncoder + AsyncAppender
+         Dev профиль: PatternLayout с %X{requestId} для MDC
+         Кастомные поля: app=infra-learn, env=production/dev -->
+</configuration>

@@ -1,0 +1,4 @@
+# TODO: Реализуй Deployment для Spring Boot приложения
+# apiVersion: apps/v1
+# kind: Deployment
+# Требования: 3 реплики, RollingUpdate, resources, labels

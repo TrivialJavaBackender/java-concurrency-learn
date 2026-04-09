@@ -1,0 +1,4 @@
+# TODO: Реализуй Service типа ClusterIP
+# apiVersion: v1
+# kind: Service
+# port: 80 -> targetPort: 8080

@@ -1,0 +1,4 @@
+# TODO: Реализуй docker-compose.yml с volumes
+# Named volume: postgres данные
+# Bind mount: ./config/application-local.properties
+# Bind mount: ./init.sql -> /docker-entrypoint-initdb.d/

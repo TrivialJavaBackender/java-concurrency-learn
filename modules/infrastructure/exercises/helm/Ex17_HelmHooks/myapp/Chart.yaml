@@ -1,0 +1,5 @@
+apiVersion: v2
+name: myapp
+description: Spring Boot application with hooks
+version: 0.3.0
+appVersion: "1.0.0"

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Infra-Learn — Orders</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; }
+
+    header {
+      background: #1a1a2e; color: white; padding: 1rem 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    #env-badge {
+      font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;
+      background: #16213e; color: #aaa; margin-left: auto;
+    }
+
+    main { max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+
+    .card {
+      background: white; border-radius: 8px; padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1); margin-bottom: 1.5rem;
+    }
+    .card h2 { font-size: 1rem; margin-bottom: 1rem; color: #555; }
+
+    form { display: flex; gap: .5rem; flex-wrap: wrap; }
+    input {
+      flex: 1; min-width: 120px; padding: .5rem .75rem;
+      border: 1px solid #ddd; border-radius: 6px; font-size: .9rem;
+    }
+    button {
+      padding: .5rem 1rem; background: #1a1a2e; color: white;
+      border: none; border-radius: 6px; cursor: pointer; font-size: .9rem;
+    }
+    button:hover { background: #16213e; }
+    button.danger { background: #c0392b; }
+    button.danger:hover { background: #a93226; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: .5rem; font-size: .8rem;
+         color: #888; border-bottom: 2px solid #eee; }
+    td { padding: .6rem .5rem; border-bottom: 1px solid #f0f0f0; font-size: .9rem; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: .75rem; font-weight: 600;
+    }
+    .badge.PENDING { background: #fef3c7; color: #92400e; }
+
+    #status { font-size: .85rem; color: #888; margin-top: .5rem; min-height: 1.2rem; }
+    .error { color: #c0392b; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Infra-Learn — Orders Demo</h1>
+  <span id="env-badge">env: loading...</span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Создать заказ</h2>
+    <form id="create-form">
+      <input id="product" placeholder="Товар" required>
+      <input id="quantity" type="number" placeholder="Кол-во" min="1" value="1" required style="max-width:100px">
+      <button type="submit">Добавить</button>
+    </form>
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Список заказов</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Товар</th><th>Кол-во</th><th>Статус</th><th>Создан</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="orders-body">
+        <tr><td colspan="6" style="color:#aaa;padding:1rem">Загрузка...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  const API = '/api';
+
+  async function fetchInfo() {
+    try {
+      const r = await fetch(`${API}/info`);
+      const d = await r.json();
+      document.getElementById('env-badge').textContent = `${d.app} | env: ${d.env}`;
+    } catch {
+      document.getElementById('env-badge').textContent = 'backend недоступен';
+    }
+  }
+
+  async function fetchOrders() {
+    try {
+      const r = await fetch(`${API}/orders`);
+      const orders = await r.json();
+      const tbody = document.getElementById('orders-body');
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:#aaa;padding:1rem">Нет заказов</td></tr>';
+        return;
+      }
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td><code>${o.id}</code></td>
+          <td>${o.product}</td>
+          <td>${o.quantity}</td>
+          <td><span class="badge ${o.status}">${o.status}</span></td>
+          <td style="color:#888;font-size:.8rem">${new Date(o.createdAt).toLocaleTimeString()}</td>
+          <td>
+            <button class="danger" onclick="deleteOrder('${o.id}')">×</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      document.getElementById('orders-body').innerHTML =
+        '<tr><td colspan="6" class="error">Ошибка загрузки</td></tr>';
+    }
+  }
+
+  async function deleteOrder(id) {
+    await fetch(`${API}/orders/${id}`, { method: 'DELETE' });
+    fetchOrders();
+  }
+
+  document.getElementById('create-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const status = document.getElementById('status');
+    const product = document.getElementById('product').value.trim();
+    const quantity = parseInt(document.getElementById('quantity').value);
+    try {
+      const r = await fetch(`${API}/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product, quantity })
+      });
+      if (!r.ok) throw new Error(r.statusText);
+      status.textContent = 'Заказ создан';
+      status.className = '';
+      document.getElementById('product').value = '';
+      fetchOrders();
+    } catch (e) {
+      status.textContent = `Ошибка: ${e.message}`;
+      status.className = 'error';
+    }
+  });
+
+  fetchInfo();
+  fetchOrders();
+  setInterval(fetchOrders, 5000);
+</script>
+</body>
+</html>

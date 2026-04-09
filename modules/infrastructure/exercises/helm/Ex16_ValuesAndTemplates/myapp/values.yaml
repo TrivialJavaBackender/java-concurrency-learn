@@ -1,0 +1,25 @@
+# TODO: Дополни values.yaml
+# Добавить:
+# - env: [] (список {name, value})
+# - ingress.enabled: false
+# - ingress.host: ""
+replicaCount: 1
+
+image:
+  repository: myapp
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# TODO: добавить env и ingress секции

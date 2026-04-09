@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+*.md
+frontend/
+exercises/
+theory/
+docker-compose.yml

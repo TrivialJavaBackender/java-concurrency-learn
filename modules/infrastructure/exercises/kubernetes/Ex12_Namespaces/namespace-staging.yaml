@@ -1,0 +1,3 @@
+# TODO: Namespace staging + ResourceQuota
+# Namespace: staging
+# ResourceQuota: requests.cpu=2, requests.memory=4Gi

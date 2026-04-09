@@ -1,0 +1,7 @@
+# TODO: Alerting rules
+# groups:
+#   - name: app-alerts
+#     rules:
+#       - alert: HighErrorRate   (5xx > 1% за 5m)
+#       - alert: HighP99Latency  (p99 > 1s за 5m)
+#       - alert: AppDown         (нет метрик 2 минуты)

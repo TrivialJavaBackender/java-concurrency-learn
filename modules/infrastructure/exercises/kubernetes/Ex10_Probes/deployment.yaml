@@ -1,0 +1,5 @@
+# TODO: Deployment с тремя типами probe
+# startupProbe: /actuator/health/readiness, failureThreshold*periodSeconds >= 60
+# readinessProbe: /actuator/health/readiness
+# livenessProbe: /actuator/health/liveness (другой endpoint!)
+# livenessProbe должен терпеть GC паузы до 5 секунд

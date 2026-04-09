@@ -1,0 +1,4 @@
+# TODO: Loki конфигурация
+# auth_enabled: false
+# server.http_listen_port: 3100
+# ingester, schema_config, storage_config, limits_config
