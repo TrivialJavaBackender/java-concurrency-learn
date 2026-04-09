@@ -1,49 +1,151 @@
 # Interview Prep
 
-Площадка для подготовки к техническим собеседованиям по backend-разработке.
-Три независимых модуля с теорией, упражнениями и вопросами для собеседований.
+Подготовка к backend-собеседованиям. Три модуля — теория, упражнения, вопросы.
+
+---
 
 ## Модули
 
-| Модуль | Тема | Стек |
-|--------|------|------|
-| [concurrency](modules/concurrency/) | Java Concurrency — потоки, локи, атомики, executor, виртуальные потоки | Kotlin, JUC, Maven |
-| [system-design](modules/system-design/) | System Design — locking стратегии, cache, rate limiter, order book, scheduler | Java, JUnit, Maven |
-| [infrastructure](modules/infrastructure/) | Docker, Kubernetes, Helm, Observability, Logging, Metrics | YAML, PromQL, Spring Boot |
+| | Модуль | Прогресс | Роадмап | Вопросы |
+|---|--------|----------|---------|---------|
+| ⚙️ | [Concurrency](modules/concurrency/README.md) | [PROGRESS](modules/concurrency/PROGRESS.md) | [ROADMAP](modules/concurrency/ROADMAP.md) | [32 вопроса](modules/concurrency/INTERVIEW_QUESTIONS.md) |
+| 🏗️ | [System Design](modules/system-design/README.md) | [PROGRESS](modules/system-design/PROGRESS.md) | [ROADMAP](modules/system-design/ROADMAP.md) | [25 вопросов](modules/system-design/INTERVIEW_QUESTIONS.md) |
+| 🐳 | [Infrastructure](modules/infrastructure/README.md) | [PROGRESS](modules/infrastructure/PROGRESS.md) | [ROADMAP](modules/infrastructure/ROADMAP.md) | [36 вопросов](modules/infrastructure/INTERVIEW_QUESTIONS.md) |
 
-## Структура
+---
 
-```
-modules/
-├── concurrency/
-│   ├── theory/          # 8 файлов: потоки, локи, CAS, коллекции, executors, ...
-│   ├── src/exercises/   # 18 Kotlin упражнений
-│   ├── ROADMAP.md
-│   ├── PROGRESS.md
-│   └── INTERVIEW_QUESTIONS.md   # 32 вопроса
-│
-├── system-design/
-│   ├── theory/          # DB транзакции, индексы, distributed systems, ...
-│   ├── src/             # Java: reservations, bank, cache, orderbook, scheduler, ratelimiter
-│   ├── ROADMAP.md
-│   ├── PROGRESS.md
-│   └── INTERVIEW_QUESTIONS.md   # 25 вопросов
-│
-└── infrastructure/
-    ├── theory/          # Docker, K8s, Helm, Observability, Logging, Metrics
-    ├── exercises/       # docker/, kubernetes/, helm/, logging/, metrics/
-    ├── ROADMAP.md
-    ├── PROGRESS.md
-    └── INTERVIEW_QUESTIONS.md   # 36 вопросов
-```
+## ⚙️ Concurrency
 
-## Команды Claude
+**[→ README](modules/concurrency/README.md) · [PROGRESS](modules/concurrency/PROGRESS.md) · [ROADMAP](modules/concurrency/ROADMAP.md) · [Вопросы](modules/concurrency/INTERVIEW_QUESTIONS.md)**
 
-| Команда | Действие |
-|---------|----------|
-| `прогресс` | Показать статус модулей |
-| `следующий` | Следующая незавершённая тема |
-| `квиз` | 5 случайных вопросов для собеседования |
-| `проверь concurrency Ex01` | Code review + запуск упражнения |
-| `проверь system-design ReservationService` | Code review + тесты |
-| `/new-module <name>` | Создать новый модуль |
+### Теория
+
+| Модуль | Файл |
+|--------|------|
+| 1. Основы потоков | [THREADS_BASICS.md](modules/concurrency/theory/THREADS_BASICS.md) |
+| 2. Locks | [LOCKS.md](modules/concurrency/theory/LOCKS.md) |
+| 3. Atomic / CAS | [ATOMIC_CAS.md](modules/concurrency/theory/ATOMIC_CAS.md) |
+| 4. Concurrent Collections | [CONCURRENT_COLLECTIONS.md](modules/concurrency/theory/CONCURRENT_COLLECTIONS.md) |
+| 5. Executors & Futures | [EXECUTORS_FUTURES.md](modules/concurrency/theory/EXECUTORS_FUTURES.md) |
+| 6. Synchronizers | [SYNCHRONIZERS.md](modules/concurrency/theory/SYNCHRONIZERS.md) |
+| 7. Проблемы многопоточности | [PROBLEMS.md](modules/concurrency/theory/PROBLEMS.md) |
+| 8. Virtual Threads | [VIRTUAL_THREADS.md](modules/concurrency/theory/VIRTUAL_THREADS.md) |
+
+### Упражнения (Kotlin)
+
+| # | Файл | Тема |
+|---|------|------|
+| 01 | [Ex01_ThreadBasics.kt](modules/concurrency/src/main/kotlin/exercises/Ex01_ThreadBasics.kt) | Потоки, synchronized, wait/notify |
+| 02 | [Ex02_ProducerConsumer.kt](modules/concurrency/src/main/kotlin/exercises/Ex02_ProducerConsumer.kt) | Bounded buffer, wait/notify |
+| 03 | [Ex03_ReentrantLockCache.kt](modules/concurrency/src/main/kotlin/exercises/Ex03_ReentrantLockCache.kt) | ReentrantLock, Condition, LRU-кэш |
+| 04 | [Ex04_ReadWriteLock.kt](modules/concurrency/src/main/kotlin/exercises/Ex04_ReadWriteLock.kt) | MetricsStore, lock downgrade |
+| 05 | [Ex05_AtomicCounter.kt](modules/concurrency/src/main/kotlin/exercises/Ex05_AtomicCounter.kt) | CAS, Treiber Stack, LongAdder |
+| 06 | [Ex06_ConcurrentMapWordCount.kt](modules/concurrency/src/main/kotlin/exercises/Ex06_ConcurrentMapWordCount.kt) | CHM merge, COWAL event bus |
+| 07 | [Ex07_BlockingQueuePipeline.kt](modules/concurrency/src/main/kotlin/exercises/Ex07_BlockingQueuePipeline.kt) | Pipeline, poison pill |
+| 08 | [Ex08_CompletableFutureChain.kt](modules/concurrency/src/main/kotlin/exercises/Ex08_CompletableFutureChain.kt) | CF цепочки, allOf, anyOf |
+| 09 | [Ex09_ForkJoinMergeSort.kt](modules/concurrency/src/main/kotlin/exercises/Ex09_ForkJoinMergeSort.kt) | ForkJoinPool, RecursiveTask |
+| 10 | [Ex10_Synchronizers.kt](modules/concurrency/src/main/kotlin/exercises/Ex10_Synchronizers.kt) | Latch, Barrier, Semaphore, Exchanger |
+| 11 | [Ex11_DeadlockDetection.kt](modules/concurrency/src/main/kotlin/exercises/Ex11_DeadlockDetection.kt) | Deadlock, ThreadMXBean |
+| 12 | [Ex12_VirtualThreads.kt](modules/concurrency/src/main/kotlin/exercises/Ex12_VirtualThreads.kt) | Virtual Threads, pinning |
+| 13 | [Ex13_ConcurrentHashMapAdvanced.kt](modules/concurrency/src/main/kotlin/exercises/Ex13_ConcurrentHashMapAdvanced.kt) | computeIfAbsent, merge, bulk ops |
+| 14 | [Ex14_BlockingQueuesDeep.kt](modules/concurrency/src/main/kotlin/exercises/Ex14_BlockingQueuesDeep.kt) | SynchronousQ, PriorityBQ, DelayQ |
+| 15 | [Ex15_ConcurrentSkipListAndSets.kt](modules/concurrency/src/main/kotlin/exercises/Ex15_ConcurrentSkipListAndSets.kt) | SkipListMap, newKeySet, COWAS |
+| 16 | [Ex16_ExecutorServiceDeep.kt](modules/concurrency/src/main/kotlin/exercises/Ex16_ExecutorServiceDeep.kt) | Все виды пулов, rejection policies |
+| 17 | [Ex17_CompletableFutureAdvanced.kt](modules/concurrency/src/main/kotlin/exercises/Ex17_CompletableFutureAdvanced.kt) | thenCombine, retry, timeout |
+| 18 | [Ex18_ScheduledExecutorAndForkJoin.kt](modules/concurrency/src/main/kotlin/exercises/Ex18_ScheduledExecutorAndForkJoin.kt) | Rate limiter, map-reduce |
+
+---
+
+## 🏗️ System Design
+
+**[→ README](modules/system-design/README.md) · [PROGRESS](modules/system-design/PROGRESS.md) · [ROADMAP](modules/system-design/ROADMAP.md) · [Вопросы](modules/system-design/INTERVIEW_QUESTIONS.md)**
+
+### Теория
+
+| Файл | Тема |
+|------|------|
+| [database_transactions.md](modules/system-design/theory/database_transactions.md) | Транзакции, изоляция, аномалии |
+| [database_indexes.md](modules/system-design/theory/database_indexes.md) | B-Tree, покрывающие индексы, EXPLAIN |
+| [distributed_systems.md](modules/system-design/theory/distributed_systems.md) | CAP, консистентность, репликация |
+| [microservice_patterns.md](modules/system-design/theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker, Bulkhead |
+| [testing.md](modules/system-design/theory/testing.md) | Тестирование конкурентного кода |
+
+### Упражнения (Java)
+
+| Пакет | Файл | Тема |
+|-------|------|------|
+| reservations | [ReservationService.java](modules/system-design/src/main/java/by/pavel/reservations/ReservationService.java) | Pessimistic locking, TOCTOU |
+| bank | [BankServiceImpl.java](modules/system-design/src/main/java/by/pavel/bank/BankServiceImpl.java) | Optimistic locking, idempotency |
+| cache | [LRUCache.java](modules/system-design/src/main/java/by/pavel/cache/LRUCache.java) | Thread-safe LRU cache |
+| orderbook | [OrderBookService.java](modules/system-design/src/main/java/by/pavel/orderbook/OrderBookService.java) | Concurrent order book |
+| scheduler | [SimpleTaskScheduler.java](modules/system-design/src/main/java/by/pavel/scheduler/SimpleTaskScheduler.java) | ScheduledExecutorService |
+| ratelimiter | [TokenBucketRateLimiter.java](modules/system-design/src/main/java/by/pavel/ratelimiter/TokenBucketRateLimiter.java) | Token bucket |
+
+---
+
+## 🐳 Infrastructure
+
+**[→ README](modules/infrastructure/README.md) · [PROGRESS](modules/infrastructure/PROGRESS.md) · [ROADMAP](modules/infrastructure/ROADMAP.md) · [Вопросы](modules/infrastructure/INTERVIEW_QUESTIONS.md)**
+
+### Теория
+
+| Файл | Тема |
+|------|------|
+| [DOCKER.md](modules/infrastructure/theory/DOCKER.md) | Dockerfile, multi-stage, compose, networking |
+| [KUBERNETES.md](modules/infrastructure/theory/KUBERNETES.md) | Pod, Deployment, Services, HPA, probes |
+| [HELM.md](modules/infrastructure/theory/HELM.md) | Charts, values, hooks, conditionals |
+| [OBSERVABILITY.md](modules/infrastructure/theory/OBSERVABILITY.md) | Logs, metrics, traces — три столпа |
+| [LOGGING.md](modules/infrastructure/theory/LOGGING.md) | Logback JSON, MDC, correlation ID |
+| [METRICS.md](modules/infrastructure/theory/METRICS.md) | Micrometer, Prometheus, PromQL, Grafana |
+
+### Упражнения
+
+#### Docker
+| # | Задача |
+|---|--------|
+| 01 | [Базовый Dockerfile](modules/infrastructure/exercises/docker/Ex01_SimpleDockerfile/TASK.md) |
+| 02 | [Multi-stage build](modules/infrastructure/exercises/docker/Ex02_MultiStageDockerfile/TASK.md) |
+| 03 | [docker-compose](modules/infrastructure/exercises/docker/Ex03_DockerCompose/TASK.md) |
+| 04 | [Networking](modules/infrastructure/exercises/docker/Ex04_DockerNetworking/TASK.md) |
+| 05 | [Volumes](modules/infrastructure/exercises/docker/Ex05_DockerVolumes/TASK.md) |
+| 06 | [Оптимизация](modules/infrastructure/exercises/docker/Ex06_DockerOptimization/TASK.md) |
+| 07 | [Security](modules/infrastructure/exercises/docker/Ex07_DockerSecurity/TASK.md) |
+
+#### Kubernetes
+| # | Задача |
+|---|--------|
+| 08 | [Pod и Deployment](modules/infrastructure/exercises/kubernetes/Ex08_PodAndDeployment/TASK.md) |
+| 09 | [ConfigMap и Secret](modules/infrastructure/exercises/kubernetes/Ex09_ConfigMapsSecrets/TASK.md) |
+| 10 | [Probes](modules/infrastructure/exercises/kubernetes/Ex10_Probes/TASK.md) |
+| 11 | [HPA](modules/infrastructure/exercises/kubernetes/Ex11_HPA/TASK.md) |
+| 12 | [Namespaces](modules/infrastructure/exercises/kubernetes/Ex12_Namespaces/TASK.md) |
+| 13 | [Resource Limits](modules/infrastructure/exercises/kubernetes/Ex13_ResourceLimits/TASK.md) |
+| 14 | [Services](modules/infrastructure/exercises/kubernetes/Ex14_Services/TASK.md) |
+
+#### Helm
+| # | Задача |
+|---|--------|
+| 15 | [Базовый chart](modules/infrastructure/exercises/helm/Ex15_BasicChart/TASK.md) |
+| 16 | [Values и шаблоны](modules/infrastructure/exercises/helm/Ex16_ValuesAndTemplates/TASK.md) |
+| 17 | [Helm hooks](modules/infrastructure/exercises/helm/Ex17_HelmHooks/TASK.md) |
+| 18 | [Условная шаблонизация](modules/infrastructure/exercises/helm/Ex18_HelmConditionals/TASK.md) |
+
+#### Logging
+| # | Задача |
+|---|--------|
+| 19 | [Logback JSON](modules/infrastructure/exercises/logging/Ex19_LogbackJson/TASK.md) |
+| 20 | [Correlation ID](modules/infrastructure/exercises/logging/Ex20_CorrelationId/TASK.md) |
+| 21 | [Structured Logging](modules/infrastructure/exercises/logging/Ex21_StructuredLogging/TASK.md) |
+| 22 | [MDC propagation](modules/infrastructure/exercises/logging/Ex22_MDCContext/TASK.md) |
+| 23 | [Log levels](modules/infrastructure/exercises/logging/Ex23_LogLevels/TASK.md) |
+| 24 | [Loki + Grafana](modules/infrastructure/exercises/logging/Ex24_LokiIntegration/TASK.md) |
+
+#### Metrics
+| # | Задача |
+|---|--------|
+| 25 | [Counter и Gauge](modules/infrastructure/exercises/metrics/Ex25_MicrometerCounterGauge/TASK.md) |
+| 26 | [Histogram / p95 / p99](modules/infrastructure/exercises/metrics/Ex26_Histogram/TASK.md) |
+| 27 | [Custom HealthIndicator](modules/infrastructure/exercises/metrics/Ex27_CustomEndpoint/TASK.md) |
+| 28 | [Prometheus config](modules/infrastructure/exercises/metrics/Ex28_PrometheusConfig/TASK.md) |
+| 29 | [Grafana dashboard](modules/infrastructure/exercises/metrics/Ex29_GrafanaDashboard/TASK.md) |
+| 30 | [PromQL запросы](modules/infrastructure/exercises/metrics/Ex30_PromQL/TASK.md) |
