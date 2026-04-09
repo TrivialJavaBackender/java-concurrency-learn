@@ -304,3 +304,326 @@ static void configure(DynamicPropertyRegistry registry) {
     registry.add("spring.datasource.url", postgres::getJdbcUrl);
 }
 ```
+
+---
+
+## Виды тестирования
+
+### Functional Testing (функциональное)
+
+Проверяет **что** система делает — соответствие функциональным требованиям.
+
+| Уровень | Инструменты | Пример |
+|---------|------------|--------|
+| Unit | JUnit 5, Mockito | Тест метода `calcDiscount()` |
+| Integration | SpringBootTest, TestContainers | Тест `OrderService` с реальной БД |
+| API / Contract | REST-Assured, WireMock, Pact | Тест HTTP эндпоинта `/api/orders` |
+| E2E | Selenium, Playwright, Cypress | Пользователь оформляет заказ в браузере |
+
+```java
+// REST-Assured: функциональный API тест
+@Test
+void createOrder_returns201() {
+    given()
+        .contentType(ContentType.JSON)
+        .body("""{"item":"book","quantity":1}""")
+    .when()
+        .post("/api/orders")
+    .then()
+        .statusCode(201)
+        .body("status", equalTo("PENDING"))
+        .body("id", notNullValue());
+}
+```
+
+**Contract Testing (Pact):** проверяет, что consumer и provider согласны с API контрактом. Consumer публикует контракт, Provider его верифицирует. Позволяет тестировать микросервисы независимо.
+
+---
+
+### Non-Functional Testing (нефункциональное)
+
+Проверяет **как** система работает: производительность, безопасность, надёжность.
+
+---
+
+### Performance Testing (нагрузочное)
+
+Проверяет поведение системы под нагрузкой.
+
+**Load Testing** — нормальная и пиковая нагрузка. Проверить: выдержит ли 1000 RPS?
+
+**Stress Testing** — превышение максимальной нагрузки. Найти точку отказа. Как система восстанавливается?
+
+**Soak/Endurance Testing** — длительная нагрузка (часы, дни). Выявляет: утечки памяти, накопление соединений, деградацию производительности.
+
+**Spike Testing** — резкий всплеск нагрузки (x10 за секунды). Как autoscaling реагирует?
+
+**Volume Testing** — поведение с большими объёмами данных (БД с 100M записей).
+
+**Инструменты:**
+```
+k6          — JavaScript, HTTP load testing, хорош для CI/CD
+Gatling     — Scala DSL, подробные HTML-отчёты
+JMeter      — GUI, много протоколов, enterprise
+Locust      — Python, простой для старта
+wrk/ab      — быстрые CLI бенчмарки
+```
+
+```javascript
+// k6 пример:
+import http from 'k6/http';
+import { sleep, check } from 'k6';
+
+export const options = {
+    vus: 100,           // виртуальных пользователей
+    duration: '30s',
+    thresholds: {
+        http_req_duration: ['p(95)<200'], // 95% запросов < 200ms
+        http_req_failed: ['rate<0.01'],   // < 1% ошибок
+    },
+};
+
+export default function () {
+    const res = http.get('http://localhost:8080/api/orders');
+    check(res, { 'status 200': (r) => r.status === 200 });
+    sleep(1);
+}
+```
+
+**Метрики нагрузочного тестирования:**
+- **Throughput (RPS/TPS)** — запросов/транзакций в секунду
+- **Latency p50/p95/p99** — медиана и хвосты распределения
+- **Error rate** — процент ошибочных ответов
+- **Saturation point** — нагрузка при которой деградация начинается
+- **Resource utilization** — CPU, memory, connections
+
+---
+
+### Security / Penetration Testing
+
+**SAST (Static Application Security Testing)** — анализ исходного кода без запуска.
+
+```
+SonarQube   — code quality + security rules
+SpotBugs + FindSecBugs — Java-специфичные уязвимости
+OWASP Dependency Check — уязвимые зависимости (CVE база)
+Semgrep     — кастомные паттерны поиска уязвимостей
+```
+
+**DAST (Dynamic Application Security Testing)** — тестирование работающего приложения.
+
+```
+OWASP ZAP   — автоматический сканер, proxy для ручного тестирования
+Burp Suite  — профессиональный proxy для пентестинга
+Nikto       — сканер веб-серверов
+```
+
+**Penetration Testing (Pentest)** — имитация атак реального злоумышленника. Ручное + автоматизированное.
+
+```
+Этапы:
+1. Reconnaissance   — сбор информации (nmap, whois, DNS)
+2. Scanning         — поиск уязвимостей (OpenVAS, Nessus)
+3. Exploitation     — эксплуатация (Metasploit, sqlmap, manual)
+4. Post-Exploitation — privilege escalation, lateral movement
+5. Reporting        — документирование + рекомендации
+```
+
+**OWASP Top 10 — что тестировать:**
+| # | Уязвимость | Тест |
+|---|-----------|------|
+| A01 | Broken Access Control | Попытки доступа без авторизации, IDOR |
+| A02 | Cryptographic Failures | Проверить HTTPS, слабые алгоритмы |
+| A03 | Injection (SQLi, XSS) | Специальные символы во входных данных |
+| A04 | Insecure Design | Отсутствие rate limiting, отсутствие CSRF |
+| A05 | Security Misconfiguration | Default passwords, открытые порты, debug в prod |
+| A07 | Auth Failures | Brute force, слабые пароли, JWT без проверки |
+| A09 | Logging & Monitoring Failures | Отсутствие alerting на аномалии |
+
+```java
+// Пример security теста (HTTP-уровень):
+@Test
+void adminEndpoint_withoutAuth_returns401() {
+    given().when().get("/api/admin/users").then().statusCode(401);
+}
+
+@Test
+void adminEndpoint_withUserRole_returns403() {
+    given()
+        .header("Authorization", "Bearer " + userToken)
+    .when()
+        .get("/api/admin/users")
+    .then()
+        .statusCode(403);
+}
+```
+
+---
+
+### Reliability Testing
+
+**Chaos Engineering** — намеренное введение сбоев в production-like окружении для проверки устойчивости.
+
+```
+Chaos Monkey (Netflix) — случайно убивает инстансы
+Chaos Mesh (K8s)       — network delay, pod failure, CPU stress
+Gremlin                — managed chaos platform
+Litmus                 — K8s native chaos
+```
+
+**Типы сбоев:**
+- **Network partition** — сетевое разделение между сервисами
+- **Latency injection** — добавление задержки к ответам
+- **Pod kill** — убийство K8s pod
+- **CPU/Memory pressure** — искусственная нагрузка на ресурсы
+- **Disk failure** — недоступность диска
+
+```yaml
+# Chaos Mesh: добавить 200ms latency к OrderService
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: order-latency
+spec:
+  action: delay
+  mode: all
+  selector:
+    labelSelectors:
+      app: order-service
+  delay:
+    latency: "200ms"
+    correlation: "25"
+    jitter: "50ms"
+```
+
+---
+
+### Smoke Testing
+
+Минимальный набор тестов после деплоя: "система жива?"
+
+```bash
+# Простой smoke test после деплоя:
+curl -f http://service/health || exit 1
+curl -f http://service/api/products?limit=1 || exit 1
+```
+
+Обычно 5-15 минут. Если smoke провалился → rollback.
+
+---
+
+### Regression Testing
+
+Проверяет, что новые изменения не сломали существующую функциональность.
+
+Автоматизированные: unit + integration suite в CI/CD. При каждом PR.
+
+---
+
+### Acceptance Testing / UAT (User Acceptance Testing)
+
+Бизнес верифицирует, что система делает то, что требовалось. Обычно перед production release.
+
+**BDD (Behavior-Driven Development):**
+```gherkin
+Feature: Place Order
+  Scenario: Successful order placement
+    Given user has item "book" in cart
+    And user has sufficient balance
+    When user clicks "Place Order"
+    Then order status is "CONFIRMED"
+    And balance is reduced by item price
+```
+
+Инструменты: Cucumber (Java), Behave (Python), SpecFlow (.NET).
+
+---
+
+### Mutation Testing
+
+Вводит намеренные ошибки в код (мутанты), проверяет что тесты их ловят. Мера качества тестов.
+
+```java
+// Оригинал:
+if (balance >= amount) { ... }
+
+// Мутант (изменение оператора):
+if (balance > amount)  { ... }  // мутант выжил → тест не поймал граничный случай
+```
+
+Инструменты: **PIT (Pitest)** для Java:
+```xml
+<plugin>
+    <groupId>org.pitest</groupId>
+    <artifactId>pitest-maven</artifactId>
+    <configuration>
+        <mutationThreshold>80</mutationThreshold>
+    </configuration>
+</plugin>
+```
+
+---
+
+## Стратегия тестирования в команде
+
+### Testing Quadrants (Agile Testing)
+
+```
+         Critique Product       Support Team
+         ─────────────────────────────────────
+Manual   │  Exploratory    │  Usability        │
+         │  UAT             │  A/B Testing      │
+         ──────────────────────────────────────
+Automated│  Performance    │  Unit             │
+         │  Security       │  Integration      │
+         │                 │  E2E              │
+         ─────────────────────────────────────
+           Business-Facing   Technology-Facing
+```
+
+### CI/CD Pipeline
+
+```
+PR →  [Unit tests: 2min]
+   →  [Integration tests: 10min]
+   →  [Security scan (SAST): 5min]
+   →  Deploy to staging
+   →  [Smoke tests: 3min]
+   →  [Performance tests: 20min] (опционально, ночью)
+   →  [E2E tests: 15min]
+   →  Deploy to production
+   →  [Smoke tests: 3min]
+```
+
+### Test Coverage
+
+**Code Coverage** — процент строк/ветвей покрытых тестами. Инструмент: JaCoCo.
+
+```
+Типичные цели:
+  Unit: 80%+ coverage основной бизнес-логики
+  Integration: критичные пути
+  E2E: happy path + основные error paths
+```
+
+**Важно:** 100% coverage ≠ хорошие тесты. Мутационное тестирование эффективнее.
+
+```java
+// JaCoCo в pom.xml:
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <configuration>
+        <rules>
+            <rule>
+                <limits>
+                    <limit>
+                        <counter>LINE</counter>
+                        <minimum>0.80</minimum>
+                    </limit>
+                </limits>
+            </rule>
+        </rules>
+    </configuration>
+</plugin>
+```

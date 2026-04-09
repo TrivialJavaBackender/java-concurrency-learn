@@ -1,5 +1,61 @@
 # Database Transactions — PostgreSQL
 
+## ACID
+
+**ACID** — свойства транзакций, гарантирующие надёжность даже при сбоях.
+
+### Atomicity (Атомарность)
+
+Транзакция — неделимая единица. Либо все операции выполняются, либо ни одна.
+
+```sql
+BEGIN;
+  UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+  UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+  -- Если здесь упадёт сервер → при рестарте PostgreSQL откатит обе операции
+COMMIT;
+```
+
+Реализация: WAL (Write-Ahead Log) — перед применением изменений записывается лог. При сбое — replay или rollback по логу.
+
+### Consistency (Согласованность)
+
+Транзакция переводит БД из одного согласованного состояния в другое. Не нарушает constraints.
+
+```sql
+-- Constraint: баланс не может быть отрицательным
+ALTER TABLE accounts ADD CONSTRAINT balance_positive CHECK (balance >= 0);
+
+BEGIN;
+  UPDATE accounts SET balance = balance - 1000 WHERE id = 1; -- баланс 50 → нарушение
+  -- ERROR: new row for relation "accounts" violates check constraint "balance_positive"
+  -- Транзакция откатывается автоматически
+```
+
+Consistency — ответственность совместно БД (constraints) и приложения (бизнес-правила).
+
+### Isolation (Изолированность)
+
+Параллельные транзакции не видят промежуточных результатов друг друга. Уровень изолированности настраивается (см. ниже).
+
+```sql
+-- T1 и T2 работают параллельно, T1 не видит незакоммиченные изменения T2
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+```
+
+### Durability (Долговечность)
+
+После COMMIT данные сохранены даже если система упадёт.
+
+Реализация: WAL сброшен на диск (`fsync`) до подтверждения COMMIT. `synchronous_commit=on` — PostgreSQL ждёт fsync перед ответом клиенту.
+
+```
+synchronous_commit=off → повышает производительность, но при сбое возможна потеря последних нескольких транзакций
+synchronous_commit=on  → полная гарантия (дефолт)
+```
+
+---
+
 ## Аномалии
 
 **Dirty Read** — чтение незакоммиченных данных другой транзакции.

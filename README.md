@@ -64,15 +64,18 @@
 
 | Файл | Тема |
 |------|------|
-| [database_transactions.md](modules/system-design/theory/database_transactions.md) | Транзакции, изоляция, аномалии, savepoints, MVCC |
+| [database_transactions.md](modules/system-design/theory/database_transactions.md) | ACID, транзакции, изоляция, аномалии, savepoints, MVCC |
 | [database_indexes.md](modules/system-design/theory/database_indexes.md) | B-Tree, GIN, pg_trgm, EXPLAIN ANALYZE |
 | [databases_types.md](modules/system-design/theory/databases_types.md) | Типы БД, NoSQL, OLAP, Redis, ORM (Identity Map, Unit of Work) |
 | [distributed_systems.md](modules/system-design/theory/distributed_systems.md) | CAP, консистентность, шардинг, репликация |
-| [microservice_patterns.md](modules/system-design/theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker, деплой стратегии |
-| [kafka.md](modules/system-design/theory/kafka.md) | Kafka: гарантии доставки, порядок, exactly-once |
+| [microservice_patterns.md](modules/system-design/theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker, sync vs async, деплой стратегии |
+| [kafka.md](modules/system-design/theory/kafka.md) | Kafka: гарантии доставки, порядок, exactly-once, HA/ISR |
 | [solid_oop.md](modules/system-design/theory/solid_oop.md) | SOLID, DIP + Jackson Adapter, Event Sourcing schema evolution |
 | [http_networking.md](modules/system-design/theory/http_networking.md) | HTTP 1.1/2.0, кэш, REST vs WS, шифрование, IPv4/IPv6 |
-| [testing.md](modules/system-design/theory/testing.md) | Тестирование конкурентного кода |
+| [stream_api.md](modules/system-design/theory/stream_api.md) | Stream API, functional interfaces, Optional, parallel streams |
+| [auth_security.md](modules/system-design/theory/auth_security.md) | JWT, OAuth2, Spring Security, Distributed Tracing |
+| [spring_di.md](modules/system-design/theory/spring_di.md) | Spring DI/IoC, GoF паттерны в Spring, AOP |
+| [testing.md](modules/system-design/theory/testing.md) | Пирамида тестов, JUnit, Mockito, performance, security, chaos |
 
 ### Упражнения (Java)
 
@@ -101,6 +104,7 @@
 | [OBSERVABILITY.md](modules/infrastructure/theory/OBSERVABILITY.md) | Logs, metrics, traces — три столпа |
 | [LOGGING.md](modules/infrastructure/theory/LOGGING.md) | Logback JSON, MDC, correlation ID |
 | [METRICS.md](modules/infrastructure/theory/METRICS.md) | Micrometer, Prometheus, PromQL, Grafana |
+| [CLOUD.md](modules/infrastructure/theory/CLOUD.md) | Regions, AZ, self-hosted vs managed DB, cloud pros/cons |
 
 ### Упражнения
 

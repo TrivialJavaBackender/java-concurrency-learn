@@ -27,15 +27,18 @@
 
 | Файл | Тема | Изучено |
 |------|------|---------|
-| [theory/database_transactions.md](theory/database_transactions.md) | Транзакции, изоляция, аномалии, savepoints | ⬜ |
+| [theory/database_transactions.md](theory/database_transactions.md) | ACID, транзакции, изоляция, аномалии, savepoints, MVCC | ⬜ |
 | [theory/database_indexes.md](theory/database_indexes.md) | Индексы, pg_trgm, EXPLAIN ANALYZE | ⬜ |
 | [theory/databases_types.md](theory/databases_types.md) | Типы БД, OLAP, Redis, ORM паттерны | ⬜ |
 | [theory/distributed_systems.md](theory/distributed_systems.md) | CAP, консистентность, репликация | ⬜ |
-| [theory/microservice_patterns.md](theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker | ⬜ |
-| [theory/kafka.md](theory/kafka.md) | Kafka: гарантии доставки, порядок, exactly-once | ⬜ |
+| [theory/microservice_patterns.md](theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker, sync vs async | ⬜ |
+| [theory/kafka.md](theory/kafka.md) | Kafka: гарантии доставки, порядок, exactly-once, HA | ⬜ |
 | [theory/solid_oop.md](theory/solid_oop.md) | SOLID, DIP + Jackson, Event Sourcing schema evolution | ⬜ |
 | [theory/http_networking.md](theory/http_networking.md) | HTTP 1.1 vs 2.0, кэш, REST vs WS, шифрование, IPv4/IPv6 | ⬜ |
-| [theory/testing.md](theory/testing.md) | Тестирование конкурентного кода | ⬜ |
+| [theory/stream_api.md](theory/stream_api.md) | Stream API, functional interfaces, Optional, parallel streams | ⬜ |
+| [theory/auth_security.md](theory/auth_security.md) | JWT, OAuth2, Spring Security, Distributed Tracing | ⬜ |
+| [theory/spring_di.md](theory/spring_di.md) | Spring DI/IoC, GoF паттерны в Spring, AOP | ⬜ |
+| [theory/testing.md](theory/testing.md) | Пирамида тестов, JUnit, Mockito, performance, security testing | ⬜ |
 | [INTERVIEW_QUESTIONS.md](INTERVIEW_QUESTIONS.md) | Вопросы по system design | ⬜ |
 
 ---
