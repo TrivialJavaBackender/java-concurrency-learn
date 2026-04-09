@@ -27,11 +27,15 @@
 
 | Файл | Тема | Изучено |
 |------|------|---------|
-| [theory/database_transactions.md](theory/database_transactions.md) | Транзакции, изоляция, аномалии | ⬜ |
-| [theory/database_indexes.md](theory/database_indexes.md) | Индексы, B-Tree, покрывающие | ⬜ |
+| [theory/database_transactions.md](theory/database_transactions.md) | Транзакции, изоляция, аномалии, savepoints | ⬜ |
+| [theory/database_indexes.md](theory/database_indexes.md) | Индексы, pg_trgm, EXPLAIN ANALYZE | ⬜ |
+| [theory/databases_types.md](theory/databases_types.md) | Типы БД, OLAP, Redis, ORM паттерны | ⬜ |
 | [theory/distributed_systems.md](theory/distributed_systems.md) | CAP, консистентность, репликация | ⬜ |
-| [theory/microservice_patterns.md](theory/microservice_patterns.md) | Паттерны: Saga, Circuit Breaker и др. | ⬜ |
-| [theory/testing.md](theory/testing.md) | Тестирование многопоточного кода | ⬜ |
+| [theory/microservice_patterns.md](theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker | ⬜ |
+| [theory/kafka.md](theory/kafka.md) | Kafka: гарантии доставки, порядок, exactly-once | ⬜ |
+| [theory/solid_oop.md](theory/solid_oop.md) | SOLID, DIP + Jackson, Event Sourcing schema evolution | ⬜ |
+| [theory/http_networking.md](theory/http_networking.md) | HTTP 1.1 vs 2.0, кэш, REST vs WS, шифрование, IPv4/IPv6 | ⬜ |
+| [theory/testing.md](theory/testing.md) | Тестирование конкурентного кода | ⬜ |
 | [INTERVIEW_QUESTIONS.md](INTERVIEW_QUESTIONS.md) | Вопросы по system design | ⬜ |
 
 ---

@@ -64,10 +64,14 @@
 
 | Файл | Тема |
 |------|------|
-| [database_transactions.md](modules/system-design/theory/database_transactions.md) | Транзакции, изоляция, аномалии |
-| [database_indexes.md](modules/system-design/theory/database_indexes.md) | B-Tree, покрывающие индексы, EXPLAIN |
-| [distributed_systems.md](modules/system-design/theory/distributed_systems.md) | CAP, консистентность, репликация |
-| [microservice_patterns.md](modules/system-design/theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker, Bulkhead |
+| [database_transactions.md](modules/system-design/theory/database_transactions.md) | Транзакции, изоляция, аномалии, savepoints, MVCC |
+| [database_indexes.md](modules/system-design/theory/database_indexes.md) | B-Tree, GIN, pg_trgm, EXPLAIN ANALYZE |
+| [databases_types.md](modules/system-design/theory/databases_types.md) | Типы БД, NoSQL, OLAP, Redis, ORM (Identity Map, Unit of Work) |
+| [distributed_systems.md](modules/system-design/theory/distributed_systems.md) | CAP, консистентность, шардинг, репликация |
+| [microservice_patterns.md](modules/system-design/theory/microservice_patterns.md) | Saga, Outbox, Circuit Breaker, деплой стратегии |
+| [kafka.md](modules/system-design/theory/kafka.md) | Kafka: гарантии доставки, порядок, exactly-once |
+| [solid_oop.md](modules/system-design/theory/solid_oop.md) | SOLID, DIP + Jackson Adapter, Event Sourcing schema evolution |
+| [http_networking.md](modules/system-design/theory/http_networking.md) | HTTP 1.1/2.0, кэш, REST vs WS, шифрование, IPv4/IPv6 |
 | [testing.md](modules/system-design/theory/testing.md) | Тестирование конкурентного кода |
 
 ### Упражнения (Java)

@@ -273,6 +273,42 @@ long backoff = (long) (100 * Math.pow(2, attempt) + Math.random() * 100);
 
 ---
 
+## Savepoints — вложенные транзакции
+
+PostgreSQL не поддерживает вложенные транзакции в классическом смысле, но поддерживает **savepoints** — точки отката внутри транзакции.
+
+```sql
+BEGIN;
+  INSERT INTO orders VALUES (1, 'pending');
+
+  SAVEPOINT before_payment;
+
+  INSERT INTO payments VALUES (1, 100);  -- ошибка?
+
+  ROLLBACK TO SAVEPOINT before_payment;  -- откатываемся к точке
+  -- orders (1, 'pending') всё ещё существует
+
+  INSERT INTO payments VALUES (1, 100, 'retry'); -- попробуем снова
+
+COMMIT; -- или ROLLBACK для полного отката
+```
+
+**Зачем нужно:**
+- Partial rollback без отмены всей транзакции
+- ORM-фреймворки используют savepoints для `@Transactional(NESTED)` в Spring
+
+**Spring Propagation.NESTED:**
+```java
+@Transactional(propagation = Propagation.NESTED) // savepoint внутри текущей транзакции
+public void innerMethod() { ... }
+// Если innerMethod бросает исключение → откат к savepoint, внешняя транзакция продолжается
+// В отличие от REQUIRES_NEW: NESTED — в той же транзакции, REQUIRES_NEW — отдельная
+```
+
+**Важно:** в PostgreSQL нет синтаксиса `BEGIN TRANSACTION` внутри `BEGIN TRANSACTION`. Любая попытка открыть транзакцию внутри транзакции игнорируется с предупреждением. Только `SAVEPOINT`.
+
+---
+
 ## Практическая стратегия для резерваций
 
 | Операция | Уровень | Дополнительно |
