@@ -117,8 +117,48 @@ traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
     <groupId>io.micrometer</groupId>
     <artifactId>micrometer-tracing-bridge-otel</artifactId>
 </dependency>
+<dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-spring-boot-starter</artifactId>
+</dependency>
 ```
+
+```yaml
+management:
+  tracing:
+    sampling:
+      probability: 1.0   # 100% в dev; в prod — 0.01-0.1 (sampling снижает нагрузку)
+  zipkin:
+    tracing:
+      endpoint: http://zipkin:9411/api/v2/spans
+```
+
 trace_id автоматически добавляется в MDC → появляется в каждой строке лога.
+
+**Backends:** Zipkin, Jaeger, Grafana Tempo, AWS X-Ray, Datadog APM.
+
+### Correlation ID vs Trace ID
+
+- **Trace ID** — технический, генерируется OpenTelemetry автоматически
+- **Correlation ID** — бизнесовый идентификатор запроса, может приходить от внешнего клиента
+
+```java
+// Spring фильтр: пробрасывает X-Correlation-ID через сервисы
+@Component
+public class CorrelationIdFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String correlationId = request.getHeader("X-Correlation-ID");
+        if (correlationId == null) correlationId = UUID.randomUUID().toString();
+        MDC.put("correlationId", correlationId);
+        response.setHeader("X-Correlation-ID", correlationId);
+        try { filterChain.doFilter(request, response); }
+        finally { MDC.clear(); }
+    }
+}
+```
 
 ---
 
