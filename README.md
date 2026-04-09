@@ -1,6 +1,6 @@
 # Interview Prep
 
-Подготовка к backend-собеседованиям. Три модуля — теория, упражнения, вопросы.
+Подготовка к backend-собеседованиям. Четыре модуля — теория, упражнения, вопросы.
 
 ---
 
@@ -11,6 +11,7 @@
 | ⚙️ | [Concurrency](modules/concurrency/README.md) | [PROGRESS](modules/concurrency/PROGRESS.md) | [ROADMAP](modules/concurrency/ROADMAP.md) | [32 вопроса](modules/concurrency/INTERVIEW_QUESTIONS.md) |
 | 🏗️ | [System Design](modules/system-design/README.md) | [PROGRESS](modules/system-design/PROGRESS.md) | [ROADMAP](modules/system-design/ROADMAP.md) | [25 вопросов](modules/system-design/INTERVIEW_QUESTIONS.md) |
 | 🐳 | [Infrastructure](modules/infrastructure/README.md) | [PROGRESS](modules/infrastructure/PROGRESS.md) | [ROADMAP](modules/infrastructure/ROADMAP.md) | [36 вопросов](modules/infrastructure/INTERVIEW_QUESTIONS.md) |
+| 🍃 | [Spring Frameworks](modules/spring-frameworks/README.md) | [PROGRESS](modules/spring-frameworks/PROGRESS.md) | [ROADMAP](modules/spring-frameworks/ROADMAP.md) | [17 вопросов](modules/spring-frameworks/INTERVIEW_QUESTIONS.md) |
 
 ---
 
@@ -73,8 +74,7 @@
 | [solid_oop.md](modules/system-design/theory/solid_oop.md) | SOLID, DIP + Jackson Adapter, Event Sourcing schema evolution |
 | [http_networking.md](modules/system-design/theory/http_networking.md) | HTTP 1.1/2.0, кэш, REST vs WS, шифрование, IPv4/IPv6 |
 | [stream_api.md](modules/system-design/theory/stream_api.md) | Stream API, functional interfaces, Optional, parallel streams |
-| [auth_security.md](modules/system-design/theory/auth_security.md) | JWT, OAuth2, Spring Security, Distributed Tracing |
-| [spring_di.md](modules/system-design/theory/spring_di.md) | Spring DI/IoC, GoF паттерны в Spring, AOP |
+| [auth_security.md](modules/system-design/theory/auth_security.md) | JWT, OAuth2 (Spring Security → см. spring-frameworks) |
 | [testing.md](modules/system-design/theory/testing.md) | Пирамида тестов, JUnit, Mockito, performance, security, chaos |
 
 ### Упражнения (Java)
@@ -157,3 +157,28 @@
 | 28 | [Prometheus config](modules/infrastructure/exercises/metrics/Ex28_PrometheusConfig/TASK.md) |
 | 29 | [Grafana dashboard](modules/infrastructure/exercises/metrics/Ex29_GrafanaDashboard/TASK.md) |
 | 30 | [PromQL запросы](modules/infrastructure/exercises/metrics/Ex30_PromQL/TASK.md) |
+
+---
+
+## 🍃 Spring Frameworks
+
+**[→ README](modules/spring-frameworks/README.md) · [PROGRESS](modules/spring-frameworks/PROGRESS.md) · [ROADMAP](modules/spring-frameworks/ROADMAP.md) · [Вопросы](modules/spring-frameworks/INTERVIEW_QUESTIONS.md)**
+
+### Теория
+
+| Файл | Тема |
+|------|------|
+| [SPRING_CORE_DI.md](modules/spring-frameworks/theory/SPRING_CORE_DI.md) | IoC, DI, Bean Scopes, AOP (прокси, self-invocation), GoF паттерны |
+| [SPRING_BOOT.md](modules/spring-frameworks/theory/SPRING_BOOT.md) | Starters, Auto-Configuration, @Conditional, Actuator, Profiles |
+| [SPRING_MVC_REST.md](modules/spring-frameworks/theory/SPRING_MVC_REST.md) | DispatcherServlet, REST, Validation, Filters vs Interceptors, CORS |
+| [SPRING_DATA_JPA.md](modules/spring-frameworks/theory/SPRING_DATA_JPA.md) | JPA, Hibernate кэши L1/L2/Query, N+1, @Transactional, Propagation |
+| [SPRING_SECURITY.md](modules/spring-frameworks/theory/SPRING_SECURITY.md) | Filter Chain, аутентификация изнутри, JWT, Method Security, CSRF |
+| [SPRING_CLOUD.md](modules/spring-frameworks/theory/SPRING_CLOUD.md) | Config, Eureka, Gateway, Feign, Circuit Breaker, Tracing |
+
+### Смежные темы в других модулях
+
+| Тема | Модуль |
+|------|--------|
+| JWT структура, OAuth2 потоки | [system-design/theory/auth_security.md](modules/system-design/theory/auth_security.md) |
+| Circuit Breaker паттерн, Saga, Outbox | [system-design/theory/microservice_patterns.md](modules/system-design/theory/microservice_patterns.md) |
+| Distributed Tracing, Observability | [infrastructure/theory/OBSERVABILITY.md](modules/infrastructure/theory/OBSERVABILITY.md) |

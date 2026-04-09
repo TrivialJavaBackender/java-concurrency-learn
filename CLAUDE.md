@@ -9,6 +9,7 @@
 | `concurrency` | `modules/concurrency/` | Java Concurrency (Kotlin + JUC) |
 | `system-design` | `modules/system-design/` | System Design (Java, применение паттернов) |
 | `infrastructure` | `modules/infrastructure/` | Docker, K8s, Helm, Observability, Logging, Metrics |
+| `spring-frameworks` | `modules/spring-frameworks/` | Spring Core/Boot/MVC/Data/Security/Cloud |
 
 ## Правило теории — NO OVERLAP
 
@@ -19,6 +20,7 @@
 | Потоки, synchronized, volatile, JMM, локи, атомики, concurrent collections, executors, synchronizers, virtual threads | `concurrency` |
 | Database transactions/indexes, distributed systems, CAP, microservice patterns (Saga, Outbox, Circuit Breaker), testing | `system-design` |
 | Docker, Kubernetes, Helm, Observability, Logging, Metrics | `infrastructure` |
+| Spring Core/DI/IoC, Spring Boot/Starters/Auto-Configuration, Spring MVC/REST, Spring Data JPA/Hibernate (включая все уровни кэша), Spring Security, Spring Cloud | `spring-frameworks` |
 
 **При добавлении теории** — всегда проверяй, не принадлежит ли тема уже другому модулю.
 Если перекрытие есть — теория должна остаться в «исходном» модуле, а в новом — дать ссылку.
@@ -134,6 +136,14 @@ mvn spring-boot:run
 - distributed_systems.md
 - microservice_patterns.md
 - testing.md
+
+### spring-frameworks (`modules/spring-frameworks/theory/`)
+- SPRING_CORE_DI.md — IoC, DI, Bean Scopes, AOP, GoF паттерны
+- SPRING_BOOT.md — Starters, Auto-Configuration, Actuator, Profiles
+- SPRING_MVC_REST.md — DispatcherServlet, REST, Validation, Filters
+- SPRING_DATA_JPA.md — JPA, Hibernate L1/L2/Query кэши, N+1, @Transactional
+- SPRING_SECURITY.md — Filter Chain, JWT, Method Security, CSRF
+- SPRING_CLOUD.md — Config, Eureka, Gateway, Feign, Circuit Breaker
 
 ### infrastructure (`modules/infrastructure/theory/`)
 - DOCKER.md, KUBERNETES.md, HELM.md

@@ -36,8 +36,7 @@
 | [theory/solid_oop.md](theory/solid_oop.md) | SOLID, DIP + Jackson, Event Sourcing schema evolution | ⬜ |
 | [theory/http_networking.md](theory/http_networking.md) | HTTP 1.1 vs 2.0, кэш, REST vs WS, шифрование, IPv4/IPv6 | ⬜ |
 | [theory/stream_api.md](theory/stream_api.md) | Stream API, functional interfaces, Optional, parallel streams | ⬜ |
-| [theory/auth_security.md](theory/auth_security.md) | JWT, OAuth2, Spring Security, Distributed Tracing | ⬜ |
-| [theory/spring_di.md](theory/spring_di.md) | Spring DI/IoC, GoF паттерны в Spring, AOP | ⬜ |
+| [theory/auth_security.md](theory/auth_security.md) | JWT, OAuth2 — Spring Security перенесена в spring-frameworks | ⬜ |
 | [theory/testing.md](theory/testing.md) | Пирамида тестов, JUnit, Mockito, performance, security testing | ⬜ |
 | [INTERVIEW_QUESTIONS.md](INTERVIEW_QUESTIONS.md) | Вопросы по system design | ⬜ |
 
